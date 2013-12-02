@@ -4,48 +4,17 @@
 use warnings;
 use strict;
 
-
-# nominate directories
-
-  my $readdir  = "/home2/jgb/reads/";
-  my $assemdir = "/home2/jgb/camaxlibs/";
-
-# make the blast database 
-# unless it already exists
-
-  my $adb    = "/home2/jgb/assemble/target/refs/anolistargetproteins.fa";
-  unless(-e "$adb.pin")
-  {
-     system("formatdb -i $adb -p T");
-  }
-
-# set a couple of parameters 
-  my $eval = "1e-9";
-  my $np = "1";
-
-#my $libfil = $assemdir . "libraries.txt";
-#open(LIB, "<$libfil");
-#my @libs = <LIB>;
-#chomp(@libs);
-
-# main loop, over libraries
-# foreach my $lib (@libs) {
-
-    # library name
-   my $lib = $ARGV[0];
-   my $assem_iter_1 = filtAssemb($readdir, $assemdir, $lib, $adb, $eval, $np);
-# }
-
-
 sub filtAssemb {
-   
    my ($readdir, $assemdir, $lib, $adb, $eval, $np) = @_;
+
    my $assemlib = $assemdir . $lib . "/";
 
-   unless(-e $assemlib or mkdir $assemlib)
-   {die "could not make $assemlib \n";}
+   unless(-e $assemlib or mkdir $assemlib) {
+       die "could not make $assemlib \n";
+   }   
 
    # grab files, set up   
+   # consider generic suffixes
    my $fil_1 = $lib . "_1_final.fastq";
    my $fil_2 = $lib . "_2_final.fastq";
    my $fil_u = $lib . "_u_final.fastq";
@@ -75,7 +44,6 @@ sub filtAssemb {
 
 }
 
-
 sub blastProts{
 
     my ($assemlib, $fastq, $fasta, $blast, $adb, $eval, $np, $f) = @_;
@@ -101,8 +69,6 @@ sub blastProts{
 
     my $callblast = system("blastall -p blastx -i $fasta -d $adb -o $blast -e $eval -m 8 -a $np -I T");
 }
-
-
 
 sub getbest{
 
@@ -147,6 +113,18 @@ sub getbest{
       
     }
 }
+
+# Sample name, samples directory, output directory, BLAST database
+my ($lib, $readdir, $assemdir, $adb) = $ARGV;
+
+die;
+
+# set a couple of parameters 
+my $eval = "1e-9";
+my $np = "1";
+
+my $assem_iter_1 = filtAssemb($readdir, $assemdir, $lib, $adb, $eval, $np);
+# Continue to iterate?
 
 __END__
 
