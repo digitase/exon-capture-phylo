@@ -1,13 +1,17 @@
 #!/bin/bash
 #$ -cwd
-#$ -m ae
+#$ -m aeb
+#$ -M u5205339@anu.edu.au
 #$ -r y
 #$ -N job_exon_capture_phylo
 #$ -t 1-1
 #$ -tc 20 
+#$ -pe threads 4
+#$ -R y
 
 # Mail on job abortion/end
 # Rerun on abort
+# Use 4 threads and reserve slots as they free
 
 # Job arrayed for each library
 
@@ -37,10 +41,10 @@ source "test.config"
 
 # Create outermost directory level for all script output
 if [ ! -d "$OUT_DIR" ]; then
-    mkdir $OUT_DIR
+    mkdir "$OUT_DIR"
 fi
 
-cd $OUT_DIR
+cd "$OUT_DIR"
 
 # 1. assembleByProt
 
@@ -51,15 +55,15 @@ parfil=${libs[$filnum]}
 
 echo Performing $0 with SGE_TASK ID $SGE_TASK_ID on sample $parfil
 
-# Create the target BLAST database unless it already exists
-if [ ! -f "$TARGET_SEQS.pin" ]; then
-    makeblastdb -dbtype prot -in $TARGET_SEQS
-fi
-
 # Args
 # 1. Sample name
 # 2. Samples directory
-# 3. BLAST database created from target protein sequences
+# 3. Script output directory
+# 4. Target protein sequences
+# 5. Name for blastx database
+perl $SCRIPT_DIR/pl/assembleByProtv2.pl "$parfil" "$SAMPLES_DIR" "$OUT_DIR" "$TARGET_SEQS" "$BLAST_DB_NAME" \
+# Create output logs
+    1> $parfil.out 2> $parfil.err
 
 perl $SCRIPT_DIR/pl/assembleByProtv2.pl ${parfil} $SAMPLES_DIR $OUT_DIR $BLAST_DB
 
