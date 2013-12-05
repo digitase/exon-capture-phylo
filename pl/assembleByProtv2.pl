@@ -68,7 +68,8 @@ sub blastProts{
     close FQ;
     close FA;
 
-    my $callblast = system("blastx -query $fasta -db $adb -out $blast -evalue $eval -num_threads $np -outfmt 8");
+    #my $callblast = system("blastx -query $fasta -db $adb -out $blast -evalue $eval -num_threads $np -outfmt 8");
+    my $callblast = system("blastall -p blastx -i $fasta -d $adb -o $blast -e $eval -m 8 -a $np -I T"); 
 }
 
 sub getbest{
