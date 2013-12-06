@@ -14,6 +14,7 @@ sub filtAssemb {
          die "could not make $assemlib \n";
     }    
 
+    # TODO This does not need to drag the files over
     # grab files, set up    
     # consider generic suffixes
     my $fil_1 = $lib . "_1_final.fastq";
@@ -116,11 +117,10 @@ sub getbest{
     }
 }
 
-use feature 'say';
-
 # Sample name, samples directory, output directory, BLAST database
 my ($lib, $readdir, $assemdir, $target_seqs, $adb) = @ARGV;
 
+use feature 'say';
 say "Command line arguments to $0 are:";
 say for @ARGV;
 
@@ -133,7 +133,7 @@ unless(-e "$adb.pin") {
 my $eval = "1e-9";
 
 # Number of threads to use 
-my $np = "4";
+my $np = "1";
 
 # First iteration
 my $assem_iter_1 = filtAssemb($readdir, $assemdir, $lib, $adb, $eval, $np);

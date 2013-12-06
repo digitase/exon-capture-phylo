@@ -3,6 +3,10 @@ use strict;
 
 my ($lib, $assemdir, $k) = @ARGV;
 
+use feature 'say';
+say "Command line arguments to $0 are:";
+say for @ARGV;
+
 my $assemlib = $assemdir . $lib . "/";
 opendir(DIR, $assemlib);
 
@@ -23,7 +27,7 @@ my @protnames = keys %unique;
 foreach my $protname (@protnames) {
 
     # slow down i/o
-    sleep(3); 
+    #sleep(3); 
 
     my $assem_filu = $assemlib . $protname . "_u_hitreads.fa";
     my $assem_fil1 = $assemlib . $protname . "_1_hitreads.fa";

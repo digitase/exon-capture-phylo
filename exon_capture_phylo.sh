@@ -6,8 +6,8 @@
 #$ -N job_exon_capture_phylo
 #$ -t 1-1
 #$ -tc 20 
-#$ -pe threads 4
 #$ -R y
+#$ -pe threads 1
 
 # Mail on job abortion/end
 # Rerun on abort
@@ -43,7 +43,9 @@ if [ ! -d "$OUT_DIR" ]; then
     mkdir "$OUT_DIR"
 fi
 
+# WARNING Clean directory
 cd "$OUT_DIR"
+rm ./* -r
 
 # Use TASK_ID as an index to extract a sample out of library
 libs=( $(cat $SAMPLE_NAMES) )
@@ -60,16 +62,15 @@ echo Performing $0 with SGE_TASK ID $SGE_TASK_ID on sample $sample_name
     # 5. Name for blastx database
 # TODO I/O intensive: produces an alignment for each exon for each sample
 # Possibly pipe
+# TODO Where is the error.log file coming from?
 echo assembleByProt with blastx database name "$BLAST_DB_NAME"
 perl "$SCRIPT_DIR/pl/assembleByProtv2.pl" "$sample_name" "$SAMPLES_DIR" "$OUT_DIR" "$TARGET_SEQS" "$BLAST_DB_NAME" \
     #1> "$sample_name.out" 2> "$sample_name.err"
 
-exit
-
 # 2. callVelvetAssemblies
 for k_value in ${VELVET_K_VALUES[@]}; do
     echo callVelvetAssemblies at "$k_value"
-    perl "$SCRIPT_DIR/pl/callVelvetAssemblies.pl" "$sample_name" "$OUT_DIR" "$k" \
+    perl "$SCRIPT_DIR/pl/callVelvetAssemblies.pl" "$sample_name" "$OUT_DIR" "$k_value" \
         #1>> "$sample_name.out" 2>> "$sample_name.err"
 done
 
@@ -77,16 +78,19 @@ done
 # TODO What is this?
 # -l virtual_free=16G,h_vmem=20G
 # -q bigmem.q
+# TODO TARGET_SEQS_DIR and TARGET_SEQS are redundant
 echo catContigs
-perl "$SCRIPT_DIR/pl/catcontigs.pl" "$sample_name" \
+export PATH=$PATH:"$CAP3_LOCATION"
+perl "$SCRIPT_DIR/pl/catcontigs.pl" "$sample_name" "$OUT_DIR" "$TARGET_SEQ_NAMES" "$TARGET_SEQS_DIR" $VELVET_K_VALUES \
     #1>> "$sample_name.out" 2>> "$sample_name.err"
 
+exit
+
 # 4. callBestContig
-for k_value in ${VELVET_K_VALUES[@]}; do
-    echo bestcontig_distrib at "$k_value"
-    perl "$SCRIPT_DIR/pl/bestcontig_distrib.pl" "$sample_name" \
-        #1>> "$sample_name.out" 2>> "$sample_name.err"
-done
+echo bestcontig_distrib
+perl "$SCRIPT_DIR/pl/bestcontig_distrib.pl" "$sample_name" \
+    #1>> "$sample_name.out" 2>> "$sample_name.err"
+
 
 # 5. gatherContigs
 perl "$SCRIPT_DIR/pl/gathercontigs.pl" \
