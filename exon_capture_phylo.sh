@@ -48,7 +48,7 @@ cd "$OUT_DIR"
 rm ./* -r
 
 # Use TASK_ID as an index to extract a sample out of library
-libs=( $(cat $SAMPLE_NAMES) )
+libs=( $(cat $LIBRARIES_LIST) )
 filnum=$[SGE_TASK_ID-1]
 sample_name=${libs[$filnum]}
 echo Performing $0 with SGE_TASK ID $SGE_TASK_ID on sample $sample_name
@@ -63,8 +63,9 @@ echo Performing $0 with SGE_TASK ID $SGE_TASK_ID on sample $sample_name
 # TODO I/O intensive: produces an alignment for each exon for each sample
 # Possibly pipe
 # TODO Where is the error.log file coming from?
-echo assembleByProt with blastx database name "$BLAST_DB_NAME"
-perl "$SCRIPT_DIR/pl/assembleByProtv2.pl" "$sample_name" "$SAMPLES_DIR" "$OUT_DIR" "$TARGET_SEQS" "$BLAST_DB_NAME" \
+echo assembleByProt with blastx database name "$TARGET_PROTEIN_BLAST_DB_NAME"
+perl "$SCRIPT_DIR/pl/assembleByProtv2.pl" "$sample_name" "$LIBRARIES_DIR" "$OUT_DIR" \
+                                          "$TARGET_PROTEIN_SEQS" "$TARGET_PROTEIN_BLAST_DB_NAME" \
     #1> "$sample_name.out" 2> "$sample_name.err"
 
 # 2. callVelvetAssemblies
@@ -78,17 +79,23 @@ done
 # TODO What is this?
 # -l virtual_free=16G,h_vmem=20G
 # -q bigmem.q
-# TODO TARGET_SEQS_DIR and TARGET_SEQS are redundant
+# TODO TARGET_PROTEIN_SEQS_DIR and TARGET_PROTEIN_SEQS are redundant
 echo catContigs
 export PATH=$PATH:"$CAP3_LOCATION"
-perl "$SCRIPT_DIR/pl/catcontigs.pl" "$sample_name" "$OUT_DIR" "$TARGET_SEQ_NAMES" "$TARGET_SEQS_DIR" $VELVET_K_VALUES \
+
+perl "$SCRIPT_DIR/pl/catcontigs.pl" "$sample_name" "$OUT_DIR" \
+                                    "$TARGET_PROTEIN_SEQS_LIST" "$TARGET_PROTEIN_SEQS_DIR" \
+                                    $VELVET_K_VALUES \
     #1>> "$sample_name.out" 2>> "$sample_name.err"
 
 exit
 
 # 4. callBestContig
 echo bestcontig_distrib
-perl "$SCRIPT_DIR/pl/bestcontig_distrib.pl" "$sample_name" \
+perl "$SCRIPT_DIR/pl/bestcontig_distrib.pl" "$sample_name" "$OUT_DIR" "$LIBRARIES_LIST" \
+                                            "$TARGET_EXON_SEQS_DIR" "$TARGET_EXON_SEQS_LIST" \
+                                            "$TARGET_PROTEIN_SEQS_DIR" "$TARGET_PROTEIN_SEQS_LIST" \
+                                            "$ALL_PROTEIN_BLAST_DB_NAME" "$MIN_OVERLAP"
     #1>> "$sample_name.out" 2>> "$sample_name.err"
 
 

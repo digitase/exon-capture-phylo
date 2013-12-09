@@ -1,71 +1,81 @@
 use warnings;
 use strict;
 
-my $assemdir = "/home2/jgb/camaxlibs/";
+# Carlia exons identified by homology to anolis proteins
+# From a carlia transcriptome, we identify carlia exons and create probes by homology to anolis target proteins
+# these are simple fasta files
 my $exondir  = "/home2/jgb/assemble/crypto/refs/targets/";
+# Format:
+# ENSACAP00000000005_exon1_Carlia.fasta
 my $exonlist = "/home2/jgb/assemble/crypto/refs/targets/targetexons.txt.all";
+
+# sample names list
+my $assemdir = "/home2/jgb/camaxlibs/";
 my $libfil   = $assemdir . "camaxalllibs.txt";
+
+# here we have the anolis protein target sequences to blast to
 my $protfil  = "/home2/jgb/assemble/crypto/anolisproteinlist.txt";
 my $protseqs = "/home2/jgb/assemble/crypto/refs/anolistargetproteins/";
+# Blast to anolis proteins instead of carlia exon dnaseq to avoid biasing for exons based on divergence to carlia
+# We blast to all anolis proteins.
+# In the case that the best hit when blasting our assembled by prot exon is not the exon that we assembled by, we ignore it
+# TODO add database creation to script
 my $blastdb  = "/home2/jgb/blastdb/anolis_carolinensis/Anolis_carolinensis.AnoCar2.0.67.pep.all.fa";
 
-my $minoverlap = 0.65;
+# Take from ARGV instead
+my ($lib, $assemdir, $libfil, $exondir, $exonlist, $protseqs, $protfil, $blastdb, $minoverlap) = @ARGV;
 
- open LIBS, "<$libfil" or die "could not open the lib file";
- open EXONS, "<$exonlist" or die "could not open the lib file";
+open EXONS, "<$exonlist" or die "could not open the lib file";
+my @exons = <EXONS>;
+chomp(@exons);
+close(EXONS);
 
+foreach my $exonfile (@exons) {
 
- my @libs  = <LIBS>;
- my @exons = <EXONS>;
- chomp(@libs); chomp(@exons);
- close(LIBS); close(EXONS);
+    #sleep(2);
 
- foreach my $exonfile (@exons) {
-sleep(2);
-   if ($exonfile =~ /(ENS\S+)_(exon\d+)_/) { 
+# exonlist entries are of the form ENSACAP00000021611_exon1_Sapro.fasta
+    if ($exonfile =~ /(ENS\S+)_(exon\d+)_/) { 
 
-    my $prot = $1; 
-    my $exon = $1 . "_" . $2;   
+# Grab protein and exon name
+        my $prot = $1; 
+        my $exon = $1 . "_" . $2;   
 
-    my ($lower, $upper) = getlimits( $exondir.$exonfile );
+# Grab exonerate alignment region bounds
+        my ($lower, $upper) = getlimits($exondir . $exonfile);
 
+# File with exonerate header, cap3 contigs and any uncatted velvet contigs
+        my $contigsallkexonerate = $assemdir . $lib . "/" . $prot . "_velvetsixk.fa.cap3out.exonerate";
+# File with the original velvet contigs
+        my $exonlibfil = $assemdir . $lib . "/" . $exon . ".fa";      
 
-#    foreach my $lib (@libs) {
+# Prefilter
+# Clip length > 65%
+# Clip to intron-exon boundaries
+        my $call1 = parseexon($contigsallkexonerate, $exonlibfil, $lower, $upper);
+        my $call2 = performRBH($exonlibfil, $prot, $blastdb);
 
-      my $lib = $ARGV[0];
-      my $contigsallkexonerate = $assemdir . $lib . "/" . $prot . "_velvetsixk.fa.cap3out.exonerate";
-      my $exonlibfil = $assemdir . $lib . "/" . $exon . ".fa";      
-
-
-      my $call1 = parseexon($contigsallkexonerate, $exonlibfil, $lower, $upper);
-      my $call2 = performRBH($exonlibfil, $prot, $blastdb);
-
-
-
-   }
-   
-   else {
+   } else {
       print "could not recognise the exon...";
    }
-
-
 
 } # end foreach @exons
 
 
-   
-
 sub performRBH {
+# Blast the contig against all anolis proteisn
     my ($exonlibfilclust, $prot, $blastdb) = @_;
     my $blastout = "$exonlibfilclust.blast";
     my $bestout = "$exonlibfilclust.best";
     system("blastall -i $exonlibfilclust -p blastx -d $blastdb -o $blastout -m 8 -e 1E-10");
+
     open BLAST, "<$blastout" or die "could not open exonfile";
     my @blastlines = <BLAST>;
     chomp(@blastlines);
     my $maxbitscore = 0;
     my $bestprothit = "";
     my $bestcontig  = "";
+
     foreach my $line (@blastlines) {
        my @linbits = split(/\t/, $line);
        if ($linbits[11] > $maxbitscore) {
@@ -75,6 +85,7 @@ sub performRBH {
        }
     }
 
+# Make sure the best hit is indeed the exon the contig was assembled off    
     if ($bestprothit eq $prot){
 
        #print "$bestprothit\t$prot\t$bestcontig\n" ;
@@ -88,13 +99,14 @@ sub performRBH {
 
           my ($name, $tmpseq) = split(/\n/,$tmplin, 2);
           $name =~ s/>//;
+
+# Then we can write out the best contig to the best file
           if ($name eq $bestcontig) {
-          $tmpseq =~ s/\n//g;
-          print BEST ">$name\n$tmpseq\n";
-       }
+              $tmpseq =~ s/\n//g;
+              print BEST ">$name\n$tmpseq\n";
+          }
 
        }
-
 
     }
 
@@ -107,8 +119,20 @@ sub getlimits {
     open EFE, "<$exfilex" or die "could not open exonfile";
     my @lines = <EFE>;
     my $nameline = $lines[2];
-    if ($nameline =~ / b(\d+) e(\d+) p/) {my $b = $1; my $e = $2; return($b, $e);}
-    else {my $b = "0"; my $e = "0"; return($b, $e);}
+
+    # exonerate --ryo >%ti b%qab e%qae p%pi\n%tas\n
+    # >ENSACAP00000013015_exon4_Carlia b157 e231 p81.08
+    # ACACGAGCCACCTCCCGGGAGGAGAAGAACCTTCAAAGCTTTCTGGAGCACCCAAAGGAGAAGTGGGTAG
+    # AGAGTGCCTTTGAGGTGGACGGGCCACACTACTATATAGTCATGGCACTCCACATCCTGCCCCCGGAGAG
+    # GTGGAAAGCCATGCGCATCGACATCCTCAGGCGGCTGCTGGTGATCTCCCAGGCCCGGGTGGTGTCTCCA
+    # GGGGGAGCAAGC
+
+    # Get beginning and end of the query region in the alignment
+    if ($nameline =~ / b(\d+) e(\d+) p/) {
+        my $b = $1; my $e = $2; return($b, $e);
+    } else {
+        my $b = "0"; my $e = "0"; return($b, $e);
+    }
 
 }
 
@@ -126,33 +150,43 @@ sub parseexon {
     #remove exonerate lines
     my @filtlines = ();
     my @lines = <EX>;
+
     foreach my $line (@lines) {
+
+    #TODO Surely this is equivalent to using NOT
+    # Remove exonerate lines and blank lines
        if ($line =~ /^Command|^Host|completed exonerate|^\n$/) {
            # do nothing
-       }
-       else {
-            push(@filtlines, $line);
+       } else {
+           push(@filtlines, $line);
        }
 
     }
     
     # check overlap with exon and print
-    my $newfilstring = join('',@filtlines);
-    my @tmplines = split(/\n>/,$newfilstring);
+    my $newfilstring = join('', @filtlines);
+    # Split into records by '>'
+    my @tmplines = split(/\n>/, $newfilstring);
 
     my $t = 1;
     foreach my $tmplin (@tmplines) {
+
         my ($name, $tmpseq) = split(/\n/,$tmplin, 2);
         $name =~ s/>//;
+
         my $b; my $e; 
-        if ($name =~ / b(\d+) e(\d+) p/) {$b = $1; $e = $2;}
-        else {$b = "0"; $e = "0";}
+        if ($name =~ / b(\d+) e(\d+) p/) {
+            $b = $1;
+            $e = $2;
+        } else {
+            $b = "0";
+            $e = "0";
+        }
 
         # is there any overlap 
-        if ( ($b >= $lower && $b < $upper) || ($e > $lower && $e <= $upper) || ($b <= $lower && $e >= $upper)) {
+        if (($b >= $lower && $b < $upper) || ($e > $lower && $e <= $upper) || ($b <= $lower && $e >= $upper)) {
   
-        # is there enough overlap
-           
+            # is there enough overlap
             my $bminuslower = 0;
             my $upperminuse = 0;
 
@@ -168,9 +202,8 @@ sub parseexon {
                 $t++;
                 print UNEX ">$newname\n$tmpseq\n";
             }
-   }
-  }
-
+        }
+    }
 }
 
 
