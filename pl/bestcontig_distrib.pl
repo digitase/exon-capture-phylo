@@ -1,29 +1,36 @@
 use warnings;
 use strict;
 
-# Carlia exons identified by homology to anolis proteins
-# From a carlia transcriptome, we identify carlia exons and create probes by homology to anolis target proteins
-# these are simple fasta files
-my $exondir  = "/home2/jgb/assemble/crypto/refs/targets/";
-# Format:
-# ENSACAP00000000005_exon1_Carlia.fasta
-my $exonlist = "/home2/jgb/assemble/crypto/refs/targets/targetexons.txt.all";
+# # Carlia exons identified by homology to anolis proteins
+# # From a carlia transcriptome, we identify carlia exons and create probes by homology to anolis target proteins
+# # these are simple fasta files
+# my $exondir  = "/home2/jgb/assemble/crypto/refs/targets/";
 
-# sample names list
-my $assemdir = "/home2/jgb/camaxlibs/";
-my $libfil   = $assemdir . "camaxalllibs.txt";
+# # Format:
+# # ENSACAP00000000005_exon1_Carlia.fasta
+# my $exonlist = "/home2/jgb/assemble/crypto/refs/targets/targetexons.txt.all";
 
-# here we have the anolis protein target sequences to blast to
-my $protfil  = "/home2/jgb/assemble/crypto/anolisproteinlist.txt";
-my $protseqs = "/home2/jgb/assemble/crypto/refs/anolistargetproteins/";
-# Blast to anolis proteins instead of carlia exon dnaseq to avoid biasing for exons based on divergence to carlia
-# We blast to all anolis proteins.
-# In the case that the best hit when blasting our assembled by prot exon is not the exon that we assembled by, we ignore it
-# TODO add database creation to script
-my $blastdb  = "/home2/jgb/blastdb/anolis_carolinensis/Anolis_carolinensis.AnoCar2.0.67.pep.all.fa";
+# # sample names list
+# my $assemdir = "/home2/jgb/camaxlibs/";
+# my $libfil   = $assemdir . "camaxalllibs.txt";
 
-# Take from ARGV instead
-my ($lib, $assemdir, $libfil, $exondir, $exonlist, $protseqs, $protfil, $blastdb, $minoverlap) = @ARGV;
+# # here we have the anolis protein target sequences to blast to
+# my $protfil  = "/home2/jgb/assemble/crypto/anolisproteinlist.txt";
+# my $protseqs = "/home2/jgb/assemble/crypto/refs/anolistargetproteins/";
+
+# # Blast to anolis proteins instead of carlia exon dnaseq to avoid biasing for exons based on divergence to carlia
+# # We blast to all anolis proteins.
+# # In the case that the best hit when blasting our assembled by prot exon is not the exon that we assembled by, we ignore it
+# # TODO add database creation to script
+# my $blastdb  = "/home2/jgb/blastdb/anolis_carolinensis/Anolis_carolinensis.AnoCar2.0.67.pep.all.fa";
+
+# take from argv instead
+my ($lib, $assemdir, $libfil, $exondir, $exonlist, $protseqs, $protfil, $all_target_seqs, $blastdb, $minoverlap) = @ARGV;
+
+# Create the target BLAST database unless it already exists
+unless(-e "$blastdb.pin") {
+    system("makeblastdb -dbtype prot -in $all_target_seqs -out $blastdb");
+}
 
 open EXONS, "<$exonlist" or die "could not open the lib file";
 my @exons = <EXONS>;
@@ -144,8 +151,7 @@ sub parseexon {
     my $lower = $_[2];
     my $upper = $_[3];
 
-    open UNEX, ">$unexonerated" or die "could not open exonfile";
-    open EX,   "<$exonerated" or die "could not open exonfile";
+    open EX,   "<$exonerated" or die "could not open exonfile $exonerated";
 
     #remove exonerate lines
     my @filtlines = ();
@@ -168,6 +174,7 @@ sub parseexon {
     # Split into records by '>'
     my @tmplines = split(/\n>/, $newfilstring);
 
+    open UNEX, ">$unexonerated" or die "could not open exonfile $unexonerated";
     my $t = 1;
     foreach my $tmplin (@tmplines) {
 

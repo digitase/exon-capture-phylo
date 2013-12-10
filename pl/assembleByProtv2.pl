@@ -132,8 +132,8 @@ unless(-e "$adb.pin") {
 # Expectation value for blastx
 my $eval = "1e-9";
 
-# Number of threads to use 
-my $np = "1";
+# Number of cores (legacy)/threads to use 
+my $np = "8";
 
 # First iteration
 my $assem_iter_1 = filtAssemb($readdir, $assemdir, $lib, $adb, $eval, $np);

@@ -7,7 +7,7 @@
 #$ -t 1-1
 #$ -tc 20 
 #$ -R y
-#$ -pe threads 1
+#$ -pe orte 8
 
 # Mail on job abortion/end
 # Rerun on abort
@@ -36,7 +36,9 @@
 #     for each exon, collect the best exon from each sample
 
 # Include the config file, which is in valid bash format
-source "test.config"
+# source "test.config"
+echo Started at $(date)
+source $1
 
 # Create outermost directory level for all script output
 if [ ! -d "$OUT_DIR" ]; then
@@ -51,7 +53,7 @@ rm ./* -r
 libs=( $(cat $LIBRARIES_LIST) )
 filnum=$[SGE_TASK_ID-1]
 sample_name=${libs[$filnum]}
-echo Performing $0 with SGE_TASK ID $SGE_TASK_ID on sample $sample_name
+echo Performing $0 with SGE_TASK ID $SGE_TASK_ID on sample $sample_name at $(date)
 
 # 1. assembleByProt
 # Args
@@ -70,9 +72,10 @@ perl "$SCRIPT_DIR/pl/assembleByProtv2.pl" "$sample_name" "$LIBRARIES_DIR" "$OUT_
 
 # 2. callVelvetAssemblies
 for k_value in ${VELVET_K_VALUES[@]}; do
-    echo callVelvetAssemblies at "$k_value"
+    echo callVelvetAssemblies at "$k_value" at $(date)
     perl "$SCRIPT_DIR/pl/callVelvetAssemblies.pl" "$sample_name" "$OUT_DIR" "$k_value" \
         #1>> "$sample_name.out" 2>> "$sample_name.err"
+        #1> /dev/null
 done
 
 # 3. catcontigs
@@ -80,7 +83,7 @@ done
 # -l virtual_free=16G,h_vmem=20G
 # -q bigmem.q
 # TODO TARGET_PROTEIN_SEQS_DIR and TARGET_PROTEIN_SEQS are redundant
-echo catContigs
+echo catContigs at $(date)
 export PATH=$PATH:"$CAP3_LOCATION"
 
 perl "$SCRIPT_DIR/pl/catcontigs.pl" "$sample_name" "$OUT_DIR" \
@@ -88,17 +91,22 @@ perl "$SCRIPT_DIR/pl/catcontigs.pl" "$sample_name" "$OUT_DIR" \
                                     $VELVET_K_VALUES \
     #1>> "$sample_name.out" 2>> "$sample_name.err"
 
-exit
-
 # 4. callBestContig
-echo bestcontig_distrib
+echo bestcontig_distrib at $(date)
 perl "$SCRIPT_DIR/pl/bestcontig_distrib.pl" "$sample_name" "$OUT_DIR" "$LIBRARIES_LIST" \
                                             "$TARGET_EXON_SEQS_DIR" "$TARGET_EXON_SEQS_LIST" \
                                             "$TARGET_PROTEIN_SEQS_DIR" "$TARGET_PROTEIN_SEQS_LIST" \
-                                            "$ALL_PROTEIN_BLAST_DB_NAME" "$MIN_OVERLAP"
+                                            "$ALL_PROTEIN_SEQS" "$ALL_PROTEIN_BLAST_DB_NAME" \
+                                            "$MIN_OVERLAP" \
     #1>> "$sample_name.out" 2>> "$sample_name.err"
+exit
 
+# TODO This needs to execute after all the array jobs are done
 
 # 5. gatherContigs
-perl "$SCRIPT_DIR/pl/gathercontigs.pl" \
+echo gathercontigs at $(date)
+perl "$SCRIPT_DIR/pl/gathercontigs.pl" "$OUT_DIR" "$LIBRARIES_LIST" \
+                                       "$TARGET_EXON_SEQS_DIR" "$TARGET_EXON_SEQS_LIST" \
+                                       "$CONTIG_NUM_FILE" \
     #1>> "$sample_name.out" 2>> "$sample_name.err"
+
