@@ -120,9 +120,9 @@ sub getbest{
 # Sample name, samples directory, output directory, BLAST database
 my ($lib, $readdir, $assemdir, $target_seqs, $adb) = @ARGV;
 
-use feature 'say';
-say "Command line arguments to $0 are:";
-say for @ARGV;
+# use feature 'say';
+# say "Command line arguments to $0 are:";
+# say for @ARGV;
 
 # Create the target BLAST database unless it already exists
 unless(-e "$adb.pin") {

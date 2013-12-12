@@ -5,7 +5,7 @@
 #$ -r y
 #$ -N job_exon_capture_phylo
 #$ -R y
-#$ -pe orte 8
+# -pe orte 8
 # -t 1-1
 # -tc 20 
 
@@ -54,20 +54,9 @@ cd "$OUT_DIR" || exit
 libs=( $(cat $LIBRARIES_LIST) )
 lib_num=${#libs[@]}
 
-# TODO this needs to be throttled to 20 jobs
-# http://superuser.com/questions/345447/how-can-i-trigger-a-notification-when-a-job-process-ends
-# or xargs
-# Using 1-indexing to retain compatability with SGE_TASK_ID
-for (( i=1; i<=$lib_num; i++ )); do
-    filnum=$((i-1))
-    sample_name=${libs[$filnum]}
-    echo Performing assemble_exons with SGE_TASK_ID $filnum on sample $sample_name at $(date)
-    xargs
-    "$SCRIPT_DIR/sh/assemble_exons.sh" "$sample_name" "$SCRIPT_DIR/$CONFIG_FILE" &
-done
+#assemble exons
+cat "$LIBRARIES_LIST" | xargs -n 1 --max-procs 20 -I {} "$SCRIPT_DIR/sh/assemble_exons.sh" {} "$SCRIPT_DIR/$CONFIG_FILE"
 
-# This needs to execute after all the array jobs are done
-wait
-
+#gather exons
 "$SCRIPT_DIR/sh/gather_exons.sh" "$SCRIPT_DIR/$CONFIG_FILE"
 

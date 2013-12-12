@@ -7,7 +7,6 @@
 
 # Include the config file, which is in valid bash format
 # source "test.config"
-echo Started at $(date)
 CONFIG_FILE="$1"
 source $CONFIG_FILE
 

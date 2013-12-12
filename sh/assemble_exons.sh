@@ -17,10 +17,10 @@
 
 # Include the config file, which is in valid bash format
 # source "test.config"
-echo Started at $(date)
 sample_name="$1"
 CONFIG_FILE="$2"
 source "$CONFIG_FILE"
+echo Started assemble_exons.sh with "$sample_name" at $(date)
 
 # 1. assembleByProt
 # Args
@@ -41,8 +41,8 @@ perl "$SCRIPT_DIR/pl/assembleByProtv2.pl" "$sample_name" "$LIBRARIES_DIR" "$OUT_
 for k_value in ${VELVET_K_VALUES[@]}; do
     echo callVelvetAssemblies at "$k_value" at $(date)
     perl "$SCRIPT_DIR/pl/callVelvetAssemblies.pl" "$sample_name" "$OUT_DIR" "$k_value" \
+        1> /dev/null
         #1>> "$sample_name.out" 2>> "$sample_name.err"
-        #1> /dev/null
 done
 
 # 3. catcontigs
@@ -67,13 +67,3 @@ perl "$SCRIPT_DIR/pl/bestcontig_distrib.pl" "$sample_name" "$OUT_DIR" "$LIBRARIE
                                             "$MIN_OVERLAP" \
     #1>> "$sample_name.out" 2>> "$sample_name.err"
 exit
-
-# TODO This needs to execute after all the array jobs are done
-
-# 5. gatherContigs
-echo gathercontigs at $(date)
-perl "$SCRIPT_DIR/pl/gathercontigs.pl" "$OUT_DIR" "$LIBRARIES_LIST" \
-                                       "$TARGET_EXON_SEQS_DIR" "$TARGET_EXON_SEQS_LIST" \
-                                       "$CONTIG_NUM_FILE" \
-    #1>> "$sample_name.out" 2>> "$sample_name.err"
-
