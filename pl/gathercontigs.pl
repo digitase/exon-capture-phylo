@@ -9,8 +9,17 @@ use strict;
 # my $ctgnums  = $assemdir . "countallcontigs.txt";
 
 my ($assemdir, $libfil, $protfil, $exondir, $exonlist, $ctgnums) = @ARGV;
+
 my $alldir   = $assemdir . "contigsall/";
 my $bestdir  = $assemdir . "contigsbest/";
+
+unless(-e $alldir or mkdir $alldir) {
+     die "could not make $alldir \n";
+}    
+
+unless(-e $bestdir or mkdir $bestdir) {
+     die "could not make $bestdir \n";
+}    
 
 open LIBS, "<$libfil" or die "could not open the lib file";
 open EXONS, "<$exonlist" or die "could not open the lib file";
@@ -93,7 +102,7 @@ foreach my $exonfile (@exons) {
     }
 }
 
-open CONNUMS, ">$ctgnums" or die "cannot open contig number outfile";
+open CONNUMS, ">$ctgnums" or die "cannot open contig number outfile $ctgnums";
 
 my $p = 0;
 foreach my $exon (keys %contignum){
