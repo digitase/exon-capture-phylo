@@ -31,7 +31,7 @@
 #     blastx: exon sequences to Anolis targets
 #     select one exon by reciprocal best hit
 
-# 5. gatherContigs
+# 5.1 gatherContigs
 #     for each exon, collect the best exon from each sample
 
 # Include the config file, which is in valid bash format
@@ -54,9 +54,10 @@ cd "$OUT_DIR" || exit
 libs=( $(cat $LIBRARIES_LIST) )
 lib_num=${#libs[@]}
 
-#assemble exons
+# assemble contigs
 cat "$LIBRARIES_LIST" | xargs -n 1 --max-procs 20 -I {} "$SCRIPT_DIR/sh/assemble_exons.sh" {} "$SCRIPT_DIR/$CONFIG_FILE"
 
-#gather exons
+# gather contigs from each sample by exon
 "$SCRIPT_DIR/sh/gather_exons.sh" "$SCRIPT_DIR/$CONFIG_FILE"
 
+exit

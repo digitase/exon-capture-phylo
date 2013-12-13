@@ -1,6 +1,9 @@
 use warnings;
 use strict;
 
+# Gather all the reads from the .best file for each exon
+# into a file with _refs.fasta for each library
+
 # my $assemdir = "/home2/jgb/assemble/crypto/";
 # my $libfil   = $assemdir . "libraries.txt";
 # my $exondir  = $assemdir . "refs/targets/";
@@ -19,7 +22,8 @@ close(LIBS); close(EXONS);
 foreach my $lib (@libs) {
 
     my $reffil = $assemdir . $lib . "/" . $lib . "_refs.fasta";
-    open REFS, ">$reffil" or die "cannot the ref fasta file";
+    open REFS, ">$reffil" or die "cannot open the ref fasta file $reffil";
+    # print $reffil . "\n";
 
     foreach my $exonfile (@exons) {
 
