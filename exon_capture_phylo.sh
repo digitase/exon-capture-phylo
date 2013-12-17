@@ -5,8 +5,8 @@
 #$ -r y
 #$ -N job_exon_capture_phylo
 #$ -R y
-#$ -l virtual_free=10G,h_vmem=12G
-#$ -q bigmem.q
+# -l virtual_free=10G,h_vmem=12G
+# -q bigmem.q
 # -pe orte 8
 # -t 1-1
 # -tc 20 
@@ -38,18 +38,17 @@
 
 # Include the config file, which is in valid bash format
 # source "test.config"
-echo Started at $(date)
+echo Started exon_capture_phylo at $(date)
 CONFIG_FILE="$1"
 source "$CONFIG_FILE"
+echo Using config file at "$CONFIG_FILE"
 
 # Create outermost directory level for all script output
 if [ ! -d "$OUT_DIR" ]; then
     mkdir "$OUT_DIR"
 fi
 
-# WARNING Clean directory
 cd "$OUT_DIR" || exit 
-# rm "$OUT_DIR/*" -r
 
 # Use TASK_ID as an index to extract a sample out of library
 
@@ -58,6 +57,8 @@ lib_num=${#libs[@]}
 
 # assemble contigs
 cat "$LIBRARIES_LIST" | xargs -n 1 --max-procs 20 -I {} "$SCRIPT_DIR/sh/assemble_exons.sh" {} "$SCRIPT_DIR/$CONFIG_FILE"
+
+exit
 
 # gather contigs by exon and by sample
 "$SCRIPT_DIR/sh/gather_exons.sh" "$SCRIPT_DIR/$CONFIG_FILE"

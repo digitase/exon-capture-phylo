@@ -25,10 +25,11 @@ echo Started assemble_exons.sh with "$sample_name" at $(date)
 # 1. assembleByProt
 # TODO I/O intensive: produces an alignment for each exon for each sample
 # Possibly pipe
-# TODO Where is the error.log file coming from?
 echo assembleByProt with blastx database name "$TARGET_PROTEIN_BLAST_DB_NAME"
 perl "$SCRIPT_DIR/pl/assembleByProtv2.pl" "$sample_name" "$LIBRARIES_DIR" "$OUT_DIR" \
                                           "$TARGET_PROTEIN_SEQS" "$TARGET_PROTEIN_BLAST_DB_NAME" \
+
+exit
 
 # 2. callVelvetAssemblies
 for k_value in ${VELVET_K_VALUES[@]}; do

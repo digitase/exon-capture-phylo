@@ -1,16 +1,42 @@
 # blastx reads against targets
 # reads with significant hits to each exon per file
 
-use warnings;
 use strict;
+use warnings;
+
+# Sample name, samples directory, output directory, BLAST database
+my ($lib, $readdir, $assemdir, $target_seqs, $adb) = @ARGV;
+
+# Create blast database directory
+my $blast_dbs_dir = $assemdir . "/blast_dbs/";
+unless(-d $blast_dbs_dir or mkdir $blast_dbs_dir) {
+    die "Could not create blast database output directory $blast_dbs_dir";
+}
+
+# Create the target BLAST database unless it already exists
+chdir("$blast_dbs_dir") or die "Cannot chdir to $!";
+unless(-e "$adb.pin") {
+    system("makeblastdb -dbtype prot -in $target_seqs -out $adb");
+}
+chdir("$assemdir") or die "Cannot chdir to $!";
+
+# Expectation value for blastx
+my $eval = "1e-9";
+# Number of cores (legacy)/threads to use 
+my $np = "8";
+
+# First iteration
+my $assem_iter_1 = filtAssemb($readdir, $assemdir, $lib, $adb, $eval, $np);
+# Continue to iterate?
 
 sub filtAssemb {
+
     my ($readdir, $assemdir, $lib, $adb, $eval, $np) = @_;
 
     # Create directory for sample
     my $assemlib = $assemdir . $lib . "/";
 
-    unless(-e $assemlib or mkdir $assemlib) {
+    unless(-d $assemlib or mkdir $assemlib) {
          die "could not make $assemlib \n";
     }    
 
@@ -46,8 +72,7 @@ sub filtAssemb {
 
 }
 
-sub blastProts{
-
+sub blastProts {
     my ($assemlib, $fastq, $fasta, $blast, $adb, $eval, $np, $f) = @_;
 
     open(FQ, "<$fastq");
@@ -64,13 +89,13 @@ sub blastProts{
         chomp($seqnm); chomp($seq);
         print FA ">" . $seqnm ."\n". $seq . "\n";
         $fasta{ $seqnm } = $seq;
-        #print "$fasta{ $seqnm }";
     }
+
     close FQ;
     close FA;
 
     #my $callblast = system("blastx -query $fasta -db $adb -out $blast -evalue $eval -num_threads $np -outfmt 8");
-    my $callblast = system("blastall -p blastx -i $fasta -d $adb -o $blast -e $eval -m 8 -a $np -I T"); 
+    my $callblast = system("blastall -p blastx -i $fasta -d $blast_dbs_dir/$adb -o $blast -e $eval -m 8 -a $np -I T"); 
 }
 
 sub getbest{
@@ -117,27 +142,6 @@ sub getbest{
     }
 }
 
-# Sample name, samples directory, output directory, BLAST database
-my ($lib, $readdir, $assemdir, $target_seqs, $adb) = @ARGV;
-
-# use feature 'say';
-# say "Command line arguments to $0 are:";
-# say for @ARGV;
-
-# Create the target BLAST database unless it already exists
-unless(-e "$adb.pin") {
-    system("makeblastdb -dbtype prot -in $target_seqs -out $adb");
-}
-
-# Expectation value for blastx
-my $eval = "1e-9";
-
-# Number of cores (legacy)/threads to use 
-my $np = "8";
-
-# First iteration
-my $assem_iter_1 = filtAssemb($readdir, $assemdir, $lib, $adb, $eval, $np);
-# Continue to iterate?
 
 __END__
 
