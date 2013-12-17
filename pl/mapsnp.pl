@@ -1,19 +1,26 @@
 use warnings;
 use strict;
 
-my $readdir  = "/home2/jgb/reads/";
-my $assemdir = "/home2/jgb/assemble/crypto/";
-my $mapdir   = "/home2/jgb/assemble/crypto/map/";
-my $lib = $ARGV[0];
+# my $readdir  = "/home2/jgb/reads/";
+# my $assemdir = "/home2/jgb/assemble/crypto/";
+# my $mapdir   = "/home2/jgb/assemble/crypto/map/";
+# my $lib = $ARGV[0];
+
+my ($lib, $readdir, $assemdir) = @ARGV;
+
+my $mapdir = $assemdir . "/map/";
+
+unless(-e $mapdir or mkdir $mapdir) {
+    die "Unable to create $mapdir\n";
+}
 my $reffil = $assemdir . $lib . "/" . $lib . "_refs.fasta";
- 
+
 my $refs    = bw($reffil);
 my $bam     = mapFiles($readdir,$lib,$refs,$mapdir);
+
 callVariants($lib,$mapdir,$bam,$refs);
 
-
-
-
+# Index fasta file for GATK
 sub callVariants {
     my ($lib,$mapdir,$bam,$refs) = @_;
     
@@ -44,7 +51,7 @@ sub mapFiles {
 sub bw {
     my $file = $_[0];
     unless(-f $file . ".1.bt2") {
-    my $call = system("/usr/local/bin/bowtie2-build $file $file");
+        my $call = system("bowtie2-build $file $file");
     }
     return($file);
 }

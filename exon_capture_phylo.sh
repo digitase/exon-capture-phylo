@@ -5,6 +5,8 @@
 #$ -r y
 #$ -N job_exon_capture_phylo
 #$ -R y
+#$ -l virtual_free=10G,h_vmem=12G
+#$ -q bigmem.q
 # -pe orte 8
 # -t 1-1
 # -tc 20 
@@ -57,7 +59,10 @@ lib_num=${#libs[@]}
 # assemble contigs
 cat "$LIBRARIES_LIST" | xargs -n 1 --max-procs 20 -I {} "$SCRIPT_DIR/sh/assemble_exons.sh" {} "$SCRIPT_DIR/$CONFIG_FILE"
 
-# gather contigs from each sample by exon
+# gather contigs by exon and by sample
 "$SCRIPT_DIR/sh/gather_exons.sh" "$SCRIPT_DIR/$CONFIG_FILE"
+
+# call variants
+cat "$LIBRARIES_LIST" | xargs -n 1 --max-procs 20 -I {} "$SCRIPT_DIR/sh/call_variants.sh" {} "$SCRIPT_DIR/$CONFIG_FILE"
 
 exit

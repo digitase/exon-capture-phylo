@@ -43,7 +43,7 @@ done
 # -q bigmem.q
 # TODO TARGET_PROTEIN_SEQS_DIR and TARGET_PROTEIN_SEQS are redundant
 echo catContigs at $(date)
-export PATH=$PATH:"$CAP3_LOCATION"
+export PATH=$PATH:"$CAP3_DIR"
 
 perl "$SCRIPT_DIR/pl/catcontigs.pl" "$sample_name" "$OUT_DIR" \
                                     "$TARGET_PROTEIN_SEQS_LIST" "$TARGET_PROTEIN_SEQS_DIR" \
