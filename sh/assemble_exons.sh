@@ -39,9 +39,6 @@ for k_value in ${VELVET_K_VALUES[@]}; do
 done
 
 # 3. catcontigs
-# TODO What is this?
-# -l virtual_free=16G,h_vmem=20G
-# -q bigmem.q
 # TODO TARGET_PROTEIN_SEQS_DIR and TARGET_PROTEIN_SEQS are redundant
 echo catContigs at $(date)
 export PATH=$PATH:"$CAP3_DIR"
