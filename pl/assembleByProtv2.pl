@@ -12,21 +12,21 @@ my ($lib, $readdir, $assemdir, $target_seqs, $adb) = @ARGV;
 # Create blast database directory
 my $blast_dbs_dir = $assemdir . "/blast_dbs/";
 unless(-d $blast_dbs_dir or mkdir $blast_dbs_dir) {
-    die "Could not create blast database output directory $blast_dbs_dir";
+    die "Could not create blast database output directory $blast_dbs_dir\n";
 }
 
 # Create the target BLAST database unless it already exists
-chdir("$blast_dbs_dir") or die "Cannot chdir to $!";
+chdir("$blast_dbs_dir") or die "Cannot chdir to $blast_dbs_dir\n";
 unless(-e "$adb.pin") {
     system("makeblastdb -dbtype prot -in $target_seqs -out $adb");
 }
-chdir("$assemdir") or die "Cannot chdir to $!";
+chdir("$assemdir") or die "Cannot chdir to $assemdir\n";
 
 # Expectation value for blastx
 my $eval = "1e-9";
 # Number of cores (legacy)/threads to use 
 my $np = "8";
-# Use blastall
+# Use blastall blastx instead of blast+ blastx?
 my $use_legacy_blast = 1;
 
 # First iteration
@@ -62,10 +62,12 @@ sub filtAssemb {
     unless(-e "$blast_2") { blastProts($fil_2, $blast_2, $fasta_2, $blast_dbs_dir, $adb, $eval, $np, $use_legacy_blast); }
     unless(-e "$blast_u") { blastProts($fil_u, $blast_u, $fasta_u, $blast_dbs_dir, $adb, $eval, $np, $use_legacy_blast); }
 
-    # put hits in fastas, arranged by Anolis protein
-    my $call_u  = getbest($assemlib, $fasta_u, $blast_u, "1" );
-    my $call_1  = getbest($assemlib, $fasta_1, $blast_1, "2" );
-    my $call_2  = getbest($assemlib, $fasta_2, $blast_2, "u" );
+    # for each exon that was hit by reads from a file, collate those reads
+    my $call_1  = getbest($assemlib, $fasta_1, $blast_1, "1" );
+    my $call_2  = getbest($assemlib, $fasta_2, $blast_2, "2" );
+    my $call_u  = getbest($assemlib, $fasta_u, $blast_u, "u" );
+
+    # for each exon that was hit by reads from a file, collate those reads with the same sequence ID from the paired file
     my $call_1p = getbest($assemlib, $fasta_2, $blast_1, "1p");
     my $call_2p = getbest($assemlib, $fasta_1, $blast_2, "2p");
 }
@@ -75,8 +77,10 @@ sub blastProts {
     
     my $blast_call;
     if($use_legacy_blast) {
+        print "Using legacy blast\n";
         $blast_call = "blastall -p blastx -d $blast_dbs_dir/$adb -o $blast -e $eval -m 8 -a $np -I T"
     } else {
+        print "Using blast+\n";
         $blast_call = "blastx -db $blast_dbs_dir/$adb -out $blast -evalue $eval -num_threads $np -outfmt 6 -show_gis"
     }
 
@@ -88,7 +92,8 @@ sub blastProts {
     ));
 }
 
-sub getbest{
+#  
+sub getbest {
     my ($assemlib, $fasta, $blast, $f) = @_;
 
     # Hash of sequence names -> sequences
@@ -116,16 +121,18 @@ sub getbest{
     }
 
     # Gather sequences hit to each protein target
-    # TODO each protein needs own dir
     foreach my $prot (keys %prothits) {
-    
-        my $poutfil = $assemlib . $prot . "_" . $f . "_hitreads.fa";
+        my $poutdir = "$assemlib/$prot/";
+        unless(-d $poutdir or mkdir $poutdir) {
+            die "Could not create exon output directory $poutdir\n";
+        }
+        my $poutfil = $poutdir . $prot . "_" . $f . "_hitreads.fa";
+
         open(POUT, ">$poutfil"); 
-            foreach my $seqhitprot (keys %{$prothits{$prot}}){
-                print POUT ">$seqhitprot\n$prothits{$prot}{$seqhitprot}\n";
-            }
+        foreach my $seqhitprot (keys %{$prothits{$prot}}) {
+            print POUT ">$seqhitprot\n$prothits{$prot}{$seqhitprot}\n";
+        }
         close(POUT);
-      
     }
 }
 
