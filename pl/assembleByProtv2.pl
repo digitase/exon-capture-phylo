@@ -25,7 +25,7 @@ chdir("$assemdir") or die "Cannot chdir to $assemdir\n";
 # Expectation value for blastx
 my $eval = "1e-9";
 # Number of parallel blast processes to use
-my $np = "24";
+my $np = "16";
 # Use blastall blastx instead of blast+ blastx?
 my $use_legacy_blast = 1;
 
@@ -77,10 +77,10 @@ sub blastProts {
     
     my $blast_call;
     if($use_legacy_blast) {
-        print "Generating $blast with legacy blastall blastx\n";
+        print "Generating $blast with legacy BLAST\n";
         $blast_call = "blastall -p blastx -d $blast_dbs_dir/$adb -e $eval -m 8 -I T"
     } else {
-        print "Generating $blast blast+ blastx\n";
+        print "Generating $blast BLAST+\n";
         $blast_call = "blastx -db $blast_dbs_dir/$adb -out $blast -evalue $eval -outfmt 6 -show_gis"
     }
 
@@ -126,7 +126,7 @@ sub getbest {
         unless(-d $poutdir or mkdir $poutdir) {
             die "Could not create exon output directory $poutdir\n";
         }
-        my $poutfil = $poutdir . $prot . "_" . $f . "_hitreads.fa";
+        my $poutfil = $poutdir . $prot . "_" . $f . "_hitreads.fasta";
 
         open(POUT, ">$poutfil") or die "Failed to open poutfil $poutfil\n"; 
         foreach my $seqhitprot (keys %{$prothits{$prot}}) {
