@@ -7,7 +7,7 @@
 #$ -R y
 # -l virtual_free=10G,h_vmem=12G
 # -q bigmem.q
-# -pe orte 8
+# -pe threads 5
 # -t 1-1
 # -tc 20 
 

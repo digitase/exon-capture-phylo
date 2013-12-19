@@ -24,8 +24,8 @@ chdir("$assemdir") or die "Cannot chdir to $assemdir\n";
 
 # Expectation value for blastx
 my $eval = "1e-9";
-# Number of cores (legacy)/threads to use 
-my $np = "8";
+# Number of parallel blast processes to use
+my $np = "24";
 # Use blastall blastx instead of blast+ blastx?
 my $use_legacy_blast = 1;
 
@@ -77,18 +77,18 @@ sub blastProts {
     
     my $blast_call;
     if($use_legacy_blast) {
-        print "Using legacy blast\n";
-        $blast_call = "blastall -p blastx -d $blast_dbs_dir/$adb -o $blast -e $eval -m 8 -a $np -I T"
+        print "Generating $blast with legacy blastall blastx\n";
+        $blast_call = "blastall -p blastx -d $blast_dbs_dir/$adb -o $blast -e $eval -m 8 -I T"
     } else {
-        print "Using blast+\n";
-        $blast_call = "blastx -db $blast_dbs_dir/$adb -out $blast -evalue $eval -num_threads $np -outfmt 6 -show_gis"
+        print "Generating $blast blast+ blastx\n";
+        $blast_call = "blastx -db $blast_dbs_dir/$adb -out $blast -evalue $eval -outfmt 6 -show_gis"
     }
 
     system(qq(
         zcat $fil | 
         awk '{if(NR % 4 == 1 || NR % 4 == 2) {sub(/@/, ">"); print; } }' | 
         tee $fasta |
-        $blast_call
+        parallel -j $np --block 1M --recstart '>' --pipe $blast_call
     ));
 }
 
@@ -128,9 +128,10 @@ sub getbest {
         }
         my $poutfil = $poutdir . $prot . "_" . $f . "_hitreads.fa";
 
-        open(POUT, ">$poutfil"); 
+        open(POUT, ">$poutfil") or die "Failed to open poutfil $poutfil\n"; 
         foreach my $seqhitprot (keys %{$prothits{$prot}}) {
             print POUT ">$seqhitprot\n$prothits{$prot}{$seqhitprot}\n";
+            # print "$seqhitprot, $prot\n";
         }
         close(POUT);
     }
