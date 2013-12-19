@@ -3,18 +3,14 @@ use strict;
 
 my ($lib, $assemdir, $k) = @ARGV;
 
-use feature 'say';
-say "Command line arguments to $0 are:";
-say for @ARGV;
+print "callVelvetAssemblies with k = $k";
 
 my $assemlib = $assemdir . $lib . "/";
 opendir(DIR, $assemlib);
-
-my @filprotnames;
 my @files = readdir(DIR);
-
 closedir(DIR);
 
+my @filprotnames;
 foreach(@files) {
     if ($_ =~ /(\S+)_(u|1|2|1p|2p)_hitreads.fa/) {
         push(@filprotnames, $1);
@@ -44,8 +40,7 @@ foreach my $protname (@protnames) {
     if(-e $assem_fil2p) {$filcall = "$filcall $assem_fil2p";}
 
     my $veldir = $assemlib."/". $protname . "_velvetk$k/";
-    unless(-e $veldir or mkdir $veldir)
-    {die "could not make $veldir \n";}
+    unless(-e $veldir or mkdir $veldir) {die "could not make $veldir \n";}
     my $allhitreads  = $veldir . $protname . "_all_hitreads.fa";
 
     system("cat $filcall > $allhitreads");

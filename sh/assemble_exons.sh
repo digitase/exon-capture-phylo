@@ -29,14 +29,16 @@ echo assembleByProt with blastx database name "$TARGET_PROTEIN_BLAST_DB_NAME"
 perl "$SCRIPT_DIR/pl/assembleByProtv2.pl" "$sample_name" "$LIBRARIES_DIR" "$OUT_DIR" \
                                           "$TARGET_PROTEIN_SEQS" "$TARGET_PROTEIN_BLAST_DB_NAME" \
 
-exit
-
 # 2. callVelvetAssemblies
-for k_value in ${VELVET_K_VALUES[@]}; do
-    echo callVelvetAssemblies at "$k_value" at $(date)
-    perl "$SCRIPT_DIR/pl/callVelvetAssemblies.pl" "$sample_name" "$OUT_DIR" "$k_value" \
-        1> /dev/null
-done
+# for k_value in ${VELVET_K_VALUES[@]}; do
+    # echo callVelvetAssemblies at "$k_value" at $(date)
+    # perl "$SCRIPT_DIR/pl/callVelvetAssemblies.pl" "$sample_name" "$OUT_DIR" "$k_value" \
+        # 1> /dev/null
+# done
+
+echo callVelvetAssemblies at $(date)
+echo "${VELVET_K_VALUES[@]}" | xargs -n 1 -I {} perl "$SCRIPT_DIR/pl/callVelvetAssemblies.pl" "$sample_name" "$OUT_DIR" {} \
+exit
 
 # 3. catcontigs
 # TODO TARGET_PROTEIN_SEQS_DIR and TARGET_PROTEIN_SEQS are redundant

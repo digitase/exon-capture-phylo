@@ -78,7 +78,7 @@ sub blastProts {
     my $blast_call;
     if($use_legacy_blast) {
         print "Generating $blast with legacy blastall blastx\n";
-        $blast_call = "blastall -p blastx -d $blast_dbs_dir/$adb -o $blast -e $eval -m 8 -I T"
+        $blast_call = "blastall -p blastx -d $blast_dbs_dir/$adb -e $eval -m 8 -I T"
     } else {
         print "Generating $blast blast+ blastx\n";
         $blast_call = "blastx -db $blast_dbs_dir/$adb -out $blast -evalue $eval -outfmt 6 -show_gis"
@@ -88,7 +88,7 @@ sub blastProts {
         zcat $fil | 
         awk '{if(NR % 4 == 1 || NR % 4 == 2) {sub(/@/, ">"); print; } }' | 
         tee $fasta |
-        parallel -j $np --block 1M --recstart '>' --pipe $blast_call
+        parallel -j $np --block 1M --recstart '>' --pipe $blast_call > $blast
     ));
 }
 
