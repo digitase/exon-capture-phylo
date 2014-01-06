@@ -39,8 +39,6 @@ perl "$SCRIPT_DIR/pl/assembleByProtv2.pl" "$sample_name" "$LIBRARIES_DIR" "$OUT_
 echo callVelvetAssemblies at $(date)
 printf "%s\n" "${VELVET_K_VALUES[@]}" | xargs -n 1 -I {} perl "$SCRIPT_DIR/pl/callVelvetAssemblies.pl" "$sample_name" "$OUT_DIR" {}
 
-exit
-
 # 3. catcontigs
 # TODO TARGET_PROTEIN_SEQS_DIR and TARGET_PROTEIN_SEQS are redundant
 echo catContigs at $(date)
@@ -49,6 +47,7 @@ export PATH=$PATH:"$CAP3_DIR"
 perl "$SCRIPT_DIR/pl/catcontigs.pl" "$sample_name" "$OUT_DIR" \
                                     "$TARGET_PROTEIN_SEQS_LIST" "$TARGET_PROTEIN_SEQS_DIR" \
                                     $VELVET_K_VALUES
+exit
 
 # 4. callBestContig
 echo bestcontig_distrib at $(date)

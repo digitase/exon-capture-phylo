@@ -59,9 +59,9 @@ lib_num=${#libs[@]}
 cat "$LIBRARIES_LIST" | xargs -n 1 --max-procs 20 -I {} "$SCRIPT_DIR/sh/assemble_exons.sh" {} "$SCRIPT_DIR/$CONFIG_FILE"
 
 exit
-
 # gather contigs by exon and by sample
 "$SCRIPT_DIR/sh/gather_exons.sh" "$SCRIPT_DIR/$CONFIG_FILE"
+
 
 # call variants
 cat "$LIBRARIES_LIST" | xargs -n 1 --max-procs 20 -I {} "$SCRIPT_DIR/sh/call_variants.sh" {} "$SCRIPT_DIR/$CONFIG_FILE"

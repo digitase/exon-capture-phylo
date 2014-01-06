@@ -51,7 +51,7 @@ foreach my $exonfile (@exons) {
 # Grab exonerate alignment region bounds
         my ($lower, $upper) = getlimits($exondir . $exonfile);
 
-# File with exonerate header, cap3 contigs and any uncatted velvet contigs
+# Existing file with exonerate header, cap3 contigs and any uncatted velvet contigs
         my $contigsallkexonerate = $assemdir . $lib . "/" . $prot . "_velvetsixk.fa.cap3out.exonerate";
 # File with the original velvet contigs
         my $exonlibfil = $assemdir . $lib . "/" . $exon . ".fa";      
@@ -60,6 +60,7 @@ foreach my $exonfile (@exons) {
 # Clip length > 65%
 # Clip to intron-exon boundaries
         my $call1 = parseexon($contigsallkexonerate, $exonlibfil, $lower, $upper);
+
         my $call2 = performRBH($exonlibfil, $prot, $blastdb);
 
    } else {
@@ -69,59 +70,9 @@ foreach my $exonfile (@exons) {
 } # end foreach @exons
 
 
-sub performRBH {
-# Blast the contig against all anolis proteisn
-    my ($exonlibfilclust, $prot, $blastdb) = @_;
-    my $blastout = "$exonlibfilclust.blast";
-    my $bestout = "$exonlibfilclust.best";
-    system("blastall -i $exonlibfilclust -p blastx -d $blastdb -o $blastout -m 8 -e 1E-10");
-
-    open BLAST, "<$blastout" or die "could not open exonfile";
-    my @blastlines = <BLAST>;
-    chomp(@blastlines);
-    my $maxbitscore = 0;
-    my $bestprothit = "";
-    my $bestcontig  = "";
-
-    foreach my $line (@blastlines) {
-       my @linbits = split(/\t/, $line);
-       if ($linbits[11] > $maxbitscore) {
-               $maxbitscore = $linbits[11];
-               $bestprothit = $linbits[1];
-               $bestcontig  = $linbits[0];
-       }
-    }
-
-# Make sure the best hit is indeed the exon the contig was assembled off    
-    if ($bestprothit eq $prot){
-
-       #print "$bestprothit\t$prot\t$bestcontig\n" ;
-       open BEST,    ">$bestout" or die "could not open exonfile";
-       open CONTIGS, "<$exonlibfilclust" or die "could not open exonfile";
-       my @contiglines = <CONTIGS>;
-       my $contigstring = join('',@contiglines);
-       my @tmplines = split(/\n>/,$contigstring);
-
-       foreach my $tmplin (@tmplines) {
-
-          my ($name, $tmpseq) = split(/\n/,$tmplin, 2);
-          $name =~ s/>//;
-
-# Then we can write out the best contig to the best file
-          if ($name eq $bestcontig) {
-              $tmpseq =~ s/\n//g;
-              print BEST ">$name\n$tmpseq\n";
-          }
-
-       }
-
-    }
-
-}
-
-
 sub getlimits {
 
+    # TODO This assumes the exon has been pre-exonerated
     my $exfilex = $_[0] . ".exonerate";
     open EFE, "<$exfilex" or die "could not open exonfile";
     my @lines = <EFE>;
@@ -214,4 +165,53 @@ sub parseexon {
 }
 
 
+sub performRBH {
+# Blast the contig against all anolis proteisn
+    my ($exonlibfilclust, $prot, $blastdb) = @_;
+    my $blastout = "$exonlibfilclust.blast";
+    my $bestout = "$exonlibfilclust.best";
+    system("blastall -i $exonlibfilclust -p blastx -d $blastdb -o $blastout -m 8 -e 1E-10");
+
+    open BLAST, "<$blastout" or die "could not open exonfile";
+    my @blastlines = <BLAST>;
+    chomp(@blastlines);
+    my $maxbitscore = 0;
+    my $bestprothit = "";
+    my $bestcontig  = "";
+
+    foreach my $line (@blastlines) {
+       my @linbits = split(/\t/, $line);
+       if ($linbits[11] > $maxbitscore) {
+               $maxbitscore = $linbits[11];
+               $bestprothit = $linbits[1];
+               $bestcontig  = $linbits[0];
+       }
+    }
+
+# Make sure the best hit is indeed the exon the contig was assembled off    
+    if ($bestprothit eq $prot){
+
+       #print "$bestprothit\t$prot\t$bestcontig\n" ;
+       open BEST,    ">$bestout" or die "could not open exonfile";
+       open CONTIGS, "<$exonlibfilclust" or die "could not open exonfile";
+       my @contiglines = <CONTIGS>;
+       my $contigstring = join('',@contiglines);
+       my @tmplines = split(/\n>/,$contigstring);
+
+       foreach my $tmplin (@tmplines) {
+
+          my ($name, $tmpseq) = split(/\n/,$tmplin, 2);
+          $name =~ s/>//;
+
+# Then we can write out the best contig to the best file
+          if ($name eq $bestcontig) {
+              $tmpseq =~ s/\n//g;
+              print BEST ">$name\n$tmpseq\n";
+          }
+
+       }
+
+    }
+
+}
   

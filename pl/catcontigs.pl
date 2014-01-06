@@ -12,16 +12,17 @@ foreach my $prot (@prots) {
    
    #sleep(2);
 
+# TODO this name concat system is flawed
    my $protseq = $protseqs . $prot . ".fasta";
    
-   my $concatcontigs     = $assemdir . $lib . "/" . $prot . "_velvetsixk.fa";
-   my $contigscap3ed     = $assemdir . $lib . "/" . $prot . "_velvetsixk.fa.cap3out";
-   my $contigsexonerated = $assemdir . $lib . "/" . $prot . "_velvetsixk.fa.cap3out.exonerate";
+   my $concatcontigs     = $assemdir . $lib . "/$prot/" . $prot . "_velvetsixk.fa";
+   my $contigscap3ed     = $assemdir . $lib . "/$prot/" . $prot . "_velvetsixk.fa.cap3out";
+   my $contigsexonerated = $assemdir . $lib . "/$prot/" . $prot . "_velvetsixk.fa.cap3out.exonerate";
 
 # cat velvet contigs for all k values into one file
    my $catcall = "";
    for my $k (@k) {
-      my $kfil = $assemdir . $lib . "/" . $prot . "_velvetk" . $k . "/contigs.fa";
+      my $kfil = $assemdir . $lib . "/$prot/" . $prot . "_velvetk" . $k . "/contigs.fa";
       $catcall = $catcall . " " . $kfil;
    }
    system("cat $catcall > $concatcontigs");
