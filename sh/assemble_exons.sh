@@ -27,7 +27,7 @@ echo Started assemble_exons.sh with "$sample_name" at $(date)
 # Possibly pipe
 echo assembleByProt with blastx database name "$TARGET_PROTEIN_BLAST_DB_NAME"
 perl "$SCRIPT_DIR/pl/assembleByProtv2.pl" "$sample_name" "$LIBRARIES_DIR" "$OUT_DIR" \
-                                          "$TARGET_PROTEIN_SEQS" "$TARGET_PROTEIN_BLAST_DB_NAME"
+                                          "$TARGET_PROTEIN_SEQS" "$TARGET_PROTEIN_BLAST_DB_NAME" "$TARGET_PROTEIN_SEQS_LIST"
 
 # 2. callVelvetAssemblies
 # for k_value in ${VELVET_K_VALUES[@]}; do
@@ -47,7 +47,6 @@ export PATH=$PATH:"$CAP3_DIR"
 perl "$SCRIPT_DIR/pl/catcontigs.pl" "$sample_name" "$OUT_DIR" \
                                     "$TARGET_PROTEIN_SEQS_LIST" "$TARGET_PROTEIN_SEQS_DIR" \
                                     $VELVET_K_VALUES
-exit
 
 # 4. callBestContig
 echo bestcontig_distrib at $(date)

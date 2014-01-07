@@ -11,8 +11,6 @@ close(PROTS);
 foreach my $prot (@prots) {
    
    #sleep(2);
-
-# TODO this name concat system is flawed
    my $protseq = $protseqs . $prot . ".fasta";
    
    my $concatcontigs     = $assemdir . $lib . "/$prot/" . $prot . "_velvetsixk.fa";

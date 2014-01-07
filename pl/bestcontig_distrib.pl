@@ -51,10 +51,11 @@ foreach my $exonfile (@exons) {
 # Grab exonerate alignment region bounds
         my ($lower, $upper) = getlimits($exondir . $exonfile);
 
+# File from catcontigs
 # Existing file with exonerate header, cap3 contigs and any uncatted velvet contigs
-        my $contigsallkexonerate = $assemdir . $lib . "/" . $prot . "_velvetsixk.fa.cap3out.exonerate";
-# File with the original velvet contigs
-        my $exonlibfil = $assemdir . $lib . "/" . $exon . ".fa";      
+        my $contigsallkexonerate = $assemdir . $lib . "/$prot/" . $prot . "_velvetsixk.fa.cap3out.exonerate";
+
+        my $exonlibfil = $assemdir . $lib . "/$prot/" . $exon . ".fa";      
 
 # Prefilter
 # Clip length > 65%

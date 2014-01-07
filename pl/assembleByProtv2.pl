@@ -7,7 +7,7 @@ use warnings;
 use File::Basename;
 
 # Sample name, samples directory, output directory, FASTA with all the targets to make the blast db, BLAST database name
-my ($lib, $readdir, $assemdir, $target_seqs, $adb) = @ARGV;
+my ($lib, $readdir, $assemdir, $target_seqs, $adb, $target_seqs_list) = @ARGV;
 
 # Create blast database directory
 my $blast_dbs_dir = $assemdir . "/blast_dbs/";
@@ -63,13 +63,13 @@ sub filtAssemb {
     unless(-e "$blast_u") { blastProts($fil_u, $blast_u, $fasta_u, $blast_dbs_dir, $adb, $eval, $np, $use_legacy_blast); }
 
     # for each exon that was hit by reads from a file, collate those reads
-    my $call_1  = getbest($assemlib, $fasta_1, $blast_1, "1" );
-    my $call_2  = getbest($assemlib, $fasta_2, $blast_2, "2" );
-    my $call_u  = getbest($assemlib, $fasta_u, $blast_u, "u" );
+    my $call_1  = getbest($assemlib, $fasta_1, $blast_1, "1" , $target_seqs_list);
+    my $call_2  = getbest($assemlib, $fasta_2, $blast_2, "2" , $target_seqs_list);
+    my $call_u  = getbest($assemlib, $fasta_u, $blast_u, "u" , $target_seqs_list);
 
     # for each exon that was hit by reads from a file, collate those reads with the same sequence ID from the paired file
-    my $call_1p = getbest($assemlib, $fasta_2, $blast_1, "1p");
-    my $call_2p = getbest($assemlib, $fasta_1, $blast_2, "2p");
+    my $call_1p = getbest($assemlib, $fasta_2, $blast_1, "1p", $target_seqs_list);
+    my $call_2p = getbest($assemlib, $fasta_1, $blast_2, "2p", $target_seqs_list);
 }
 
 sub blastProts {
@@ -94,7 +94,18 @@ sub blastProts {
 
 #  
 sub getbest {
-    my ($assemlib, $fasta, $blast, $f) = @_;
+    my ($assemlib, $fasta, $blast, $f, $target_seqs_list) = @_;
+
+    # Make output dirs for all protein targets
+    open(TARGET_SEQS_LIST, "<$target_seqs_list") or die "Failed to open list of target sequence IDs $target_seqs_list\n";
+    while(<TARGET_SEQS_LIST>) {
+        chomp; 
+        my $poutdir = "$assemlib/$_/";
+        unless(-d $poutdir or mkdir $poutdir) {
+            die "Could not create exon output directory $poutdir\n";
+        }
+    }
+    close(TARGET_SEQS_LIST);
 
     # Hash of sequence names -> sequences
     my %fasta;
@@ -120,13 +131,10 @@ sub getbest {
        $prothits{$hitsprot}{$hitseqnm} = $fasta{ $hitseqnm };
     }
 
-    # Gather sequences hit to each protein target
+
+    # Gather sequences hit to each protein target in previously made dirs
     foreach my $prot (keys %prothits) {
-        my $poutdir = "$assemlib/$prot/";
-        unless(-d $poutdir or mkdir $poutdir) {
-            die "Could not create exon output directory $poutdir\n";
-        }
-        my $poutfil = $poutdir . $prot . "_" . $f . "_hitreads.fasta";
+        my $poutfil = "$assemlib/$prot/" . $prot . "_" . $f . "_hitreads.fasta";
 
         open(POUT, ">$poutfil") or die "Failed to open poutfil $poutfil\n"; 
         foreach my $seqhitprot (keys %{$prothits{$prot}}) {
