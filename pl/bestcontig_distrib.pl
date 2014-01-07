@@ -27,11 +27,19 @@ use strict;
 # take from argv instead
 my ($lib, $assemdir, $libfil, $exondir, $exonlist, $protseqs, $protfil, $all_target_seqs, $blastdb, $minoverlap) = @ARGV;
 
+# Create blast database directory
+my $blast_dbs_dir = $assemdir . "/blast_dbs/";
+unless(-d $blast_dbs_dir or mkdir $blast_dbs_dir) {
+    die "Could not create blast database output directory $blast_dbs_dir\n";
+}
 # Create the target BLAST database unless it already exists
+chdir("$blast_dbs_dir") or die "Cannot chdir to $blast_dbs_dir\n";
 unless(-e "$blastdb.pin") {
     system("makeblastdb -dbtype prot -in $all_target_seqs -out $blastdb");
 }
+chdir("$assemdir") or die "Cannot chdir to $assemdir\n";
 
+# grab target IDs
 open EXONS, "<$exonlist" or die "could not open the lib file";
 my @exons = <EXONS>;
 chomp(@exons);
@@ -62,7 +70,7 @@ foreach my $exonfile (@exons) {
 # Clip to intron-exon boundaries
         my $call1 = parseexon($contigsallkexonerate, $exonlibfil, $lower, $upper);
 
-        my $call2 = performRBH($exonlibfil, $prot, $blastdb);
+        my $call2 = performRBH($exonlibfil, $prot, $blastdb, $blast_dbs_dir);
 
    } else {
       print "could not recognise the exon...";
@@ -168,10 +176,10 @@ sub parseexon {
 
 sub performRBH {
 # Blast the contig against all anolis proteisn
-    my ($exonlibfilclust, $prot, $blastdb) = @_;
+    my ($exonlibfilclust, $prot, $blastdb, $blast_dbs_dir) = @_;
     my $blastout = "$exonlibfilclust.blast";
     my $bestout = "$exonlibfilclust.best";
-    system("blastall -i $exonlibfilclust -p blastx -d $blastdb -o $blastout -m 8 -e 1E-10");
+    system("blastall -i $exonlibfilclust -p blastx -d $blast_dbs_dir/$blastdb -o $blastout -m 8 -e 1E-10");
 
     open BLAST, "<$blastout" or die "could not open exonfile";
     my @blastlines = <BLAST>;

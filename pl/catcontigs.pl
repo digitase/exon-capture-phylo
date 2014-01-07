@@ -8,8 +8,6 @@ my @prots = <PROTS>;
 chomp(@prots); 
 close(PROTS);
 
-print join(", ", @ARGV);
-
 foreach my $prot (@prots) {
    
    #sleep(2);
@@ -34,6 +32,8 @@ foreach my $prot (@prots) {
 
    # 99% identity in a 20 bp overlap
    # perfect overlap for short overlaps
+   # system("cap3 $concatcontigs -o 20 -p 99");
+   # Segfaults if no seqs found
    system("cap3 $concatcontigs -o 20 -p 99 >> cap3.log");
 
    # concat consensus and singleton contigs
