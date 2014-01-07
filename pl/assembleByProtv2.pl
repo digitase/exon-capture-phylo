@@ -133,6 +133,7 @@ sub getbest {
 
 
     # Gather sequences hit to each protein target in previously made dirs
+    # TODO move hitreads.fasta files to a hitreads dir
     foreach my $prot (keys %prothits) {
         my $poutfil = "$assemlib/$prot/" . $prot . "_" . $f . "_hitreads.fasta";
 

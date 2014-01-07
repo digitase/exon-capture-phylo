@@ -46,7 +46,7 @@ export PATH=$PATH:"$CAP3_DIR"
 
 perl "$SCRIPT_DIR/pl/catcontigs.pl" "$sample_name" "$OUT_DIR" \
                                     "$TARGET_PROTEIN_SEQS_LIST" "$TARGET_PROTEIN_SEQS_DIR" \
-                                    $VELVET_K_VALUES
+                                    ${VELVET_K_VALUES[@]}
 
 # 4. callBestContig
 echo bestcontig_distrib at $(date)
