@@ -30,29 +30,23 @@ perl "$SCRIPT_DIR/pl/assembleByProtv2.pl" "$sample_name" "$LIBRARIES_DIR" "$OUT_
                                           "$TARGET_PROTEIN_SEQS" "$TARGET_PROTEIN_BLAST_DB_NAME" "$TARGET_PROTEIN_SEQS_LIST"
 
 # 2. callVelvetAssemblies
-# for k_value in ${VELVET_K_VALUES[@]}; do
-    # echo callVelvetAssemblies at "$k_value" at $(date)
-    # perl "$SCRIPT_DIR/pl/callVelvetAssemblies.pl" "$sample_name" "$OUT_DIR" "$k_value" \
-        # 1> /dev/null
-# done
-
 echo callVelvetAssemblies at $(date)
-printf "%s\n" "${VELVET_K_VALUES[@]}" | xargs -n 1 -I {} perl "$SCRIPT_DIR/pl/callVelvetAssemblies.pl" "$sample_name" "$OUT_DIR" {}
+printf "%s\n" "${VELVET_K_VALUES[@]}" | xargs -n 1 -I {} perl "$SCRIPT_DIR/pl/callVelvetAssemblies.pl" \
+                                                                  "$sample_name" "$OUT_DIR" "$TARGET_PROTEIN_SEQS_LIST" {} 
 
 # 3. catcontigs
-# TODO TARGET_PROTEIN_SEQS_DIR and TARGET_PROTEIN_SEQS are redundant
 echo catContigs at $(date)
 export PATH=$PATH:"$CAP3_DIR"
 
 perl "$SCRIPT_DIR/pl/catcontigs.pl" "$sample_name" "$OUT_DIR" \
-                                    "$TARGET_PROTEIN_SEQS_LIST" "$TARGET_PROTEIN_SEQS_DIR" \
+                                    "$TARGET_PROTEIN_SEQS_LIST" "$TARGET_PROTEIN_SEQS" \
                                     ${VELVET_K_VALUES[@]}
 
+exit
 # 4. callBestContig
 echo bestcontig_distrib at $(date)
 perl "$SCRIPT_DIR/pl/bestcontig_distrib.pl" "$sample_name" "$OUT_DIR" "$LIBRARIES_LIST" \
                                             "$TARGET_EXON_SEQS_DIR" "$TARGET_EXON_SEQS_LIST" \
-                                            "$TARGET_PROTEIN_SEQS_DIR" "$TARGET_PROTEIN_SEQS_LIST" \
                                             "$ALL_PROTEIN_SEQS" "$ALL_PROTEIN_BLAST_DB_NAME" \
                                             "$MIN_OVERLAP"
 

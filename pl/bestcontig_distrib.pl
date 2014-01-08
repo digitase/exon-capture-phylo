@@ -14,10 +14,6 @@ use strict;
 # my $assemdir = "/home2/jgb/camaxlibs/";
 # my $libfil   = $assemdir . "camaxalllibs.txt";
 
-# # here we have the anolis protein target sequences to blast to
-# my $protfil  = "/home2/jgb/assemble/crypto/anolisproteinlist.txt";
-# my $protseqs = "/home2/jgb/assemble/crypto/refs/anolistargetproteins/";
-
 # # Blast to anolis proteins instead of carlia exon dnaseq to avoid biasing for exons based on divergence to carlia
 # # We blast to all anolis proteins.
 # # In the case that the best hit when blasting our assembled by prot exon is not the exon that we assembled by, we ignore it
@@ -25,7 +21,7 @@ use strict;
 # my $blastdb  = "/home2/jgb/blastdb/anolis_carolinensis/Anolis_carolinensis.AnoCar2.0.67.pep.all.fa";
 
 # take from argv instead
-my ($lib, $assemdir, $libfil, $exondir, $exonlist, $protseqs, $protfil, $all_target_seqs, $blastdb, $minoverlap) = @ARGV;
+my ($lib, $assemdir, $libfil, $exondir, $exonlist, $all_target_seqs, $blastdb, $minoverlap) = @ARGV;
 
 # Create blast database directory
 my $blast_dbs_dir = $assemdir . "/blast_dbs/";

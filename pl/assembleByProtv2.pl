@@ -49,9 +49,9 @@ sub filtAssemb {
     my $fil_2 = "$readdir/$lib" . "_2_final.fastq.gz";
     my $fil_u = "$readdir/$lib" . "_u_final.fastq.gz";
 
-    my $blast_1 = "$assemlib/$lib" . "_1_final.blast";
-    my $blast_2 = "$assemlib/$lib" . "_2_final.blast";
-    my $blast_u = "$assemlib/$lib" . "_u_final.blast";
+    my $blast_1 = "$assemlib/$lib" . "_1_final.against_targets.blast";
+    my $blast_2 = "$assemlib/$lib" . "_2_final.against_targets.blast";
+    my $blast_u = "$assemlib/$lib" . "_u_final.against_targets.blast";
 
     my $fasta_1 = "$assemlib/$lib" . "_1_final.fasta";
     my $fasta_2 = "$assemlib/$lib" . "_2_final.fasta";
@@ -96,15 +96,9 @@ sub blastProts {
 sub getbest {
     my ($assemlib, $fasta, $blast, $f, $target_seqs_list) = @_;
 
-    # Make output dirs for all protein targets
-    open(TARGET_SEQS_LIST, "<$target_seqs_list") or die "Failed to open list of target sequence IDs $target_seqs_list\n";
-    while(<TARGET_SEQS_LIST>) {
-        chomp; 
-        my $poutdir = "$assemlib/$_/";
-        unless(-d $poutdir or mkdir $poutdir) {
-            die "Could not create exon output directory $poutdir\n";
-        }
-    }
+    open TARGET_SEQS_LIST, "<$target_seqs_list" or die "could not open the target IDs list";
+    my @protnames = <TARGET_SEQS_LIST>;
+    chomp(@protnames);
     close(TARGET_SEQS_LIST);
 
     # Hash of sequence names -> sequences
@@ -121,7 +115,7 @@ sub getbest {
     close FA;
         
     # Hash of protein names -> hit sequence names to the prot -> sequences
-    my %prothits;
+    my %prothits = map { $_ => {} } @protnames;
     open(BLOUT, "<$blast") or die "Failed to open BLAST output file $blast\n";
     while(<BLOUT>) 
     {
@@ -131,16 +125,22 @@ sub getbest {
        $prothits{$hitsprot}{$hitseqnm} = $fasta{ $hitseqnm };
     }
 
-
-    # Gather sequences hit to each protein target in previously made dirs
-    # TODO move hitreads.fasta files to a hitreads dir
     foreach my $prot (keys %prothits) {
-        my $poutfil = "$assemlib/$prot/" . $prot . "_" . $f . "_hitreads.fasta";
 
+        # Create script output directory structure for target
+        my $poutdir = "$assemlib/$prot/";
+        unless(-d $poutdir or mkdir $poutdir) { die "Could not create exon output directory $poutdir\n"; }
+
+        my $assemble_by_prot_dir = "$poutdir/${prot}_assemble_by_prot/";
+        unless(-d $assemble_by_prot_dir or mkdir $assemble_by_prot_dir) {
+            die "Could not create assembleByProt output directory $assemble_by_prot_dir\n";
+        }
+
+        # Gather reads that blast hit onto target
+        my $poutfil = "$assemble_by_prot_dir/${prot}_${f}_hitreads.fasta";
         open(POUT, ">$poutfil") or die "Failed to open poutfil $poutfil\n"; 
         foreach my $seqhitprot (keys %{$prothits{$prot}}) {
             print POUT ">$seqhitprot\n$prothits{$prot}{$seqhitprot}\n";
-            # print "$seqhitprot, $prot\n";
         }
         close(POUT);
     }
