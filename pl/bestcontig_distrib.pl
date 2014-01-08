@@ -1,33 +1,9 @@
 use warnings;
 use strict;
 
-# # Carlia exons identified by homology to anolis proteins
-# # From a carlia transcriptome, we identify carlia exons and create probes by homology to anolis target proteins
-# # these are simple fasta files
-# my $exondir  = "/home2/jgb/assemble/crypto/refs/targets/";
-
-# # Format:
-# # ENSACAP00000000005_exon1_Carlia.fasta
-# my $exonlist = "/home2/jgb/assemble/crypto/refs/targets/targetexons.txt.all";
-
-# # sample names list
-# my $assemdir = "/home2/jgb/camaxlibs/";
-# my $libfil   = $assemdir . "camaxalllibs.txt";
-
-# # Blast to anolis proteins instead of carlia exon dnaseq to avoid biasing for exons based on divergence to carlia
-# # We blast to all anolis proteins.
-# # In the case that the best hit when blasting our assembled by prot exon is not the exon that we assembled by, we ignore it
-# # TODO add database creation to script
-# my $blastdb  = "/home2/jgb/blastdb/anolis_carolinensis/Anolis_carolinensis.AnoCar2.0.67.pep.all.fa";
-
-# take from argv instead
 my ($lib, $assemdir, $libfil, $exondir, $exonlist, $all_target_seqs, $blastdb, $minoverlap) = @ARGV;
 
-# Create blast database directory
 my $blast_dbs_dir = $assemdir . "/blast_dbs/";
-unless(-d $blast_dbs_dir or mkdir $blast_dbs_dir) {
-    die "Could not create blast database output directory $blast_dbs_dir\n";
-}
 # Create the target BLAST database unless it already exists
 chdir("$blast_dbs_dir") or die "Cannot chdir to $blast_dbs_dir\n";
 unless(-e "$blastdb.pin") {
@@ -35,15 +11,15 @@ unless(-e "$blastdb.pin") {
 }
 chdir("$assemdir") or die "Cannot chdir to $assemdir\n";
 
-# grab target IDs
+# grab target exon IDs
 open EXONS, "<$exonlist" or die "could not open the lib file";
 my @exons = <EXONS>;
 chomp(@exons);
 close(EXONS);
 
-foreach my $exonfile (@exons) {
+my $assemlib = "$assemdir/$lib/";
 
-    #sleep(2);
+foreach my $exonfile (@exons) {
 
 # exonlist entries are of the form ENSACAP00000021611_exon1_Sapro.fasta
     if ($exonfile =~ /(ENS\S+)_(exon\d+)_/) { 
@@ -57,21 +33,26 @@ foreach my $exonfile (@exons) {
 
 # File from catcontigs
 # Existing file with exonerate header, cap3 contigs and any uncatted velvet contigs
-        my $contigsallkexonerate = $assemdir . $lib . "/$prot/" . $prot . "_velvetsixk.fa.cap3out.exonerate";
+        my $exonerated_contigs = "$assemlib/$prot/${prot}_call_velvet_assemblies/${prot}_velvet_contigs.fasta";
 
-        my $exonlibfil = $assemdir . $lib . "/$prot/" . $exon . ".fa";      
+        my $bestcontig_distrib_dir = "$assemlib/$prot/${prot}_bestcontig_distrib/";
+        unless(-e $bestcontig_distrib_dir or mkdir $bestcontig_distrib_dir) { die "Could not make $bestcontig_distrib_dir\n"; }
+
+        my $exonlibfil = "$bestcontig_distrib_dir/$exon.good_overlap.fasta";      
 
 # Prefilter
 # Clip length > 65%
 # Clip to intron-exon boundaries
-        my $call1 = parseexon($contigsallkexonerate, $exonlibfil, $lower, $upper);
+        my $call1 = parseexon($exonerated_contigs, $exonlibfil, $lower, $upper);
 
+# blast
         my $call2 = performRBH($exonlibfil, $prot, $blastdb, $blast_dbs_dir);
 
    } else {
       print "could not recognise the exon...";
    }
 
+    #sleep(2);
 } # end foreach @exons
 
 
@@ -197,6 +178,7 @@ sub performRBH {
     if ($bestprothit eq $prot){
 
        #print "$bestprothit\t$prot\t$bestcontig\n" ;
+       # TODO move this to outside the if statement to ensure creation?
        open BEST,    ">$bestout" or die "could not open exonfile";
        open CONTIGS, "<$exonlibfilclust" or die "could not open exonfile";
        my @contiglines = <CONTIGS>;
