@@ -45,7 +45,7 @@ perl "$SCRIPT_DIR/pl/catcontigs.pl" "$sample_name" "$OUT_DIR" \
 # 4. callBestContig
 echo bestcontig_distrib at $(date)
 perl "$SCRIPT_DIR/pl/bestcontig_distrib.pl" "$sample_name" "$OUT_DIR" "$LIBRARIES_LIST" \
-                                            "$TARGET_EXON_SEQS_DIR" "$TARGET_EXON_SEQS_LIST" \
+                                            "$TARGET_EXON_SEQS" "$TARGET_EXON_SEQS_LIST" \
                                             "$ALL_PROTEIN_SEQS" "$ALL_PROTEIN_BLAST_DB_NAME" \
                                             "$MIN_OVERLAP"
 

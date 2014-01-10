@@ -3,7 +3,7 @@ use strict;
 
 use List::Util qw(max min);
 
-my ($lib, $assemdir, $libfil, $exondir, $exonlist, $all_target_seqs, $blastdb, $minoverlap) = @ARGV;
+my ($lib, $assemdir, $libfil, $target_exons_file, $exonlist, $all_target_seqs, $blastdb, $minoverlap) = @ARGV;
 
 # Create the target BLAST database unless it already exists
 my $blast_dbs_dir = $assemdir . "/blast_dbs/";
@@ -21,11 +21,11 @@ close(EXONS);
 
 my $assemlib = "$assemdir/$lib/";
 
-foreach my $exonfile (@exons) {
+foreach my $exon (@exons) {
 
-    # exonlist entries are of the form ENSACAP00000021611_exon1_Sapro.fasta
+    # exonlist entries are of the form ENSACAP00000021611_exon1_Sapro
     # TODO change to alphanumberic regex
-    if ($exonfile =~ /(ENS\S+)_(exon\d+)_/) { 
+    if ($exon =~ /(ENS\S+)_(exon\S+)/) { 
 
         my $prot = $1; 
         my $exon_name = $1 . "_" . $2;   
@@ -35,8 +35,11 @@ foreach my $exonfile (@exons) {
 
         # TODO add this to the pipeline; combine all exons into a file, don't use a dir
         # get overlap between target exon and anolis
+
+        my $exonerate_target = "$bestcontig_distrib_dir/$exon_name.fasta";
+        system("perl -ne 'if(/^>(\\S+)/) { \$c = grep {/^\$1\$/} qw($exon) } print if \$c' $target_exons_file > $exonerate_target");
+
         my $exonerate_query = "$assemlib/$prot/${prot}_catcontigs/$prot.fasta";
-        my $exonerate_target = "$exondir/$exonfile";
         my $exonerate_out = "$bestcontig_distrib_dir/$exon_name.exonerated.fasta";
         my ($region_start, $region_end) = getTargetRegionInProtein($exonerate_query, $exonerate_target, $exonerate_out);
 
@@ -51,7 +54,7 @@ foreach my $exonfile (@exons) {
         getBestContig($filtered_contigs, $prot, $blastdb, $blast_dbs_dir, $exon_name, $minoverlap);
 
     } else {
-        print "Exon naming format incorrect for: $exonfile\n";
+        print "Exon naming format incorrect for: $exon\n";
     }
 
     # sleep(2);
