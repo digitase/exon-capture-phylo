@@ -50,20 +50,14 @@ fi
 
 cd "$OUT_DIR" || exit 
 
-# Use TASK_ID as an index to extract a sample out of library
-
-libs=( $(cat $LIBRARIES_LIST) )
-lib_num=${#libs[@]}
-
 # assemble contigs
-cat "$LIBRARIES_LIST" | xargs -n 1 --max-procs 20 -I {} "$SCRIPT_DIR/sh/assemble_exons.sh" {} "$SCRIPT_DIR/$CONFIG_FILE"
+< "$LIBRARIES_LIST" xargs -n 1 --max-procs 20 -I {} "$SCRIPT_DIR/sh/assemble_exons.sh" {} "$SCRIPT_DIR/$CONFIG_FILE"
 
 exit
 # gather contigs by exon and by sample
 "$SCRIPT_DIR/sh/gather_exons.sh" "$SCRIPT_DIR/$CONFIG_FILE"
 
-
 # call variants
-cat "$LIBRARIES_LIST" | xargs -n 1 --max-procs 20 -I {} "$SCRIPT_DIR/sh/call_variants.sh" {} "$SCRIPT_DIR/$CONFIG_FILE"
+< "$LIBRARIES_LIST" xargs -n 1 --max-procs 20 -I {} "$SCRIPT_DIR/sh/call_variants.sh" {} "$SCRIPT_DIR/$CONFIG_FILE"
 
 exit

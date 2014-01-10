@@ -42,7 +42,6 @@ perl "$SCRIPT_DIR/pl/catcontigs.pl" "$sample_name" "$OUT_DIR" \
                                     "$TARGET_PROTEIN_SEQS_LIST" "$TARGET_PROTEIN_SEQS" \
                                     ${VELVET_K_VALUES[@]}
 
-exit
 # 4. callBestContig
 echo bestcontig_distrib at $(date)
 perl "$SCRIPT_DIR/pl/bestcontig_distrib.pl" "$sample_name" "$OUT_DIR" "$LIBRARIES_LIST" \

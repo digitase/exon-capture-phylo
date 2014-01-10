@@ -81,7 +81,7 @@ sub blastProts {
         $blast_call = "blastall -p blastx -d $blast_dbs_dir/$adb -e $eval -m 8 -I T"
     } else {
         print "Generating $blast BLAST+\n";
-        $blast_call = "blastx -db $blast_dbs_dir/$adb -out $blast -evalue $eval -outfmt 6 -show_gis"
+        $blast_call = "blastx -db $blast_dbs_dir/$adb -evalue $eval -outfmt 6 -show_gis"
     }
 
     system(qq(
