@@ -14,7 +14,7 @@ unless(-e "$blastdb.pin") {
 chdir("$assemdir") or die "Cannot chdir to $assemdir\n";
 
 # Grab target exon IDs
-open EXONS, "<$exonlist" or die "could not open the lib file";
+open EXONS, "<$exonlist" or die "Could not open list of target exons file $exonlist";
 my @exons = <EXONS>;
 chomp(@exons);
 close(EXONS);
@@ -35,13 +35,16 @@ foreach my $exonfile (@exons) {
 
         # TODO add this to the pipeline; combine all exons into a file, don't use a dir
         # get overlap between target exon and anolis
-        my ($region_start, $region_end) = getTargetRegionInProtein($exondir . $exonfile);
+        my $exonerate_query = "$assemlib/$prot/${prot}_catcontigs/$prot.fasta";
+        my $exonerate_target = "$exondir/$exonfile";
+        my $exonerate_out = "$bestcontig_distrib_dir/$exon_name.exonerated.fasta";
+        my ($region_start, $region_end) = getTargetRegionInProtein($exonerate_query, $exonerate_target, $exonerate_out);
 
         # get overlaps between assembled contigs and anolis, then filter for those contigs with good overlap with target region
         # File from catcontigs
         my $exonerated_contigs = "$assemlib/$prot/${prot}_catcontigs/${prot}_velvet_contigs.cap3ed.exonerated.fasta";
-        # output file
-        my $filtered_contigs = "$bestcontig_distrib_dir/$exon_name.good_overlap.fasta";      
+        # output file with contigs that overlap to the current exon
+        my $filtered_contigs = "$bestcontig_distrib_dir/${exon_name}_velvet_contigs.cap3ed.exonerated.filtered.fasta";      
         filterExoneratedContigs($exonerated_contigs, $filtered_contigs, $region_start, $region_end, $exon_name, $minoverlap);
 
         # determine best contig for the exon by blastx
@@ -55,24 +58,30 @@ foreach my $exonfile (@exons) {
 }
 
 sub getTargetRegionInProtein {
-    # TODO This assumes the exon has been pre-exonerated
-    my $exfilex = $_[0] . ".exonerate";
+    my ($exonerate_query, $exonerate_target, $exonerate_out) = @_;
+
+    my $ryo = '">%ti b%qab e%qae p%pi\\n%tas\\n"';
+    system("exonerate --model protein2genome --query $exonerate_query --target $exonerate_target --showvulgar no --showalignment no --ryo $ryo > $exonerate_out");
     
-    open EFE, "<$exfilex" or die "could not open exonfile";
-    my @lines = <EFE>;
+    # Remove exonerate lines
+    open EFE, "<$exonerate_out" or die "Could not open exonerate output file $exonerate_out\n";
+    my @lines = grep(!/^Command line:|^Hostname:|-- completed exonerate analysis|^\n$/, <EFE>);
     close EFE;
-    my $nameline = $lines[2];
 
     # Get beginning and end of the query region in the alignment
-    if ($nameline =~ / b(\d+) e(\d+) p/) {
+    my $nameline = $lines[0];
+    if (scalar(@lines) == 0) {
+        warn "Warning: No exonerate alignment between $exonerate_query and $exonerate_target detected\n";
+        return("0", "0");
+    } elsif ($nameline =~ / b(\d+) e(\d+) p/) {
         my $b = $1; my $e = $2;
         return($b, $e);
     } else {
-        die "Invalid exonerate sequence ID line $nameline in $exfilex\n";
+        die "Invalid exonerate sequence ID line $nameline in $exonerate_out\n";
     }
 }
 
-
+# Check for assembled contigs to overlap with exon
 sub filterExoneratedContigs {
     my ($exonerated_contigs, $filtered_contigs, $region_start, $region_end, $exon_name, $minoverlap) = @_;
 
@@ -90,7 +99,10 @@ sub filterExoneratedContigs {
         my ($contig_name_line, $contig_seq) = split(/\n/, $contig, 2);
 
         my $contig_name; my $b; my $e; 
-        if ($contig_name_line =~ /^>(\S+) b(\d+) e(\d+) p/) {
+        if (scalar(@contig_file_lines) == 0) {
+            warn "Warning: No exonerate alignment in $exonerated_contigs detected\n";
+            $contig_name = ""; $b = "0"; $e = "0";
+        } elsif ($contig_name_line =~ /^>(\S+) b(\d+) e(\d+) p/) {
             $contig_name = $1; $b = $2; $e = $3;
         } else {
             die "Invalid exonerate sequence ID line $contig_name_line in $exonerated_contigs\n";
@@ -108,15 +120,18 @@ sub filterExoneratedContigs {
     close OUT;
 }
 
-
 sub getBestContig {
     # Blast the contig against all anolis proteisn
-    my ($filtered_contigsclust, $prot, $blastdb, $blast_dbs_dir) = @_;
-    my $blastout = "$filtered_contigsclust.against_all.blast";
-    my $bestout = "$filtered_contigsclust.best_contig";
-    system("blastall -i $filtered_contigsclust -p blastx -d $blast_dbs_dir/$blastdb -o $blastout -m 8 -e 1E-10");
+    my ($filtered_contigs_file, $prot, $blastdb, $blast_dbs_dir) = @_;
+
+    my $filtered_contigs_basename = $filtered_contigs_file;
+    $filtered_contigs_basename =~ s/\.fasta//;
+
+    my $blastout = "$filtered_contigs_basename.against_all.blast";
+    my $bestout = "$filtered_contigs_basename.best_contig.fasta";
+    system("blastall -i $filtered_contigs_file -p blastx -d $blast_dbs_dir/$blastdb -o $blastout -m 8 -e 1E-10");
     
-    open BLAST, "<$blastout" or die "could not open exonfile";
+    open BLAST, "<$blastout" or die "Could not open blastx output file $blastout\n";
     my @blastlines = <BLAST>;
     chomp(@blastlines);
     my $maxbitscore = 0;
@@ -133,9 +148,9 @@ sub getBestContig {
     }
 
     # Make sure the best hit is indeed the exon the contig was assembled off    
-    open BEST,    ">$bestout" or die "could not open exonfile";
+    open BEST, ">$bestout" or die "Could not open best contig output file $bestout\n";
     if ($bestprothit eq $prot) {
-        open CONTIGS, "<$filtered_contigsclust" or die "could not open exonfile";
+        open CONTIGS, "<$filtered_contigs_file" or die "Could not open filtered assembled contigs file $filtered_contigs_file\n";
         my @tmplines = split(/\n>/, join('', <CONTIGS>));
         foreach my $tmplin (@tmplines) {
             my ($name, $tmpseq) = split(/\n/,$tmplin, 2);
