@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-my ($lib, $assemdir, $target_seqs_list, $target_seqs, @k_values) = @ARGV;
+my ($lib, $assemdir, $target_seqs_list, @k_values) = @ARGV;
 
 open PROTS, "<$target_seqs_list" or die "could not open the lib file";
 my @prots = <PROTS>;
@@ -29,7 +29,7 @@ foreach my $prot (@prots) {
     system("cat $all_assembled_contigs.cap.contigs $all_assembled_contigs.cap.singlets > $cap3ed_contigs");
 
     my $exonerate_query = "$catcontigs_dir/$prot.fasta";
-    system("perl -ne 'if(/^>(\\S+)/) { \$c = grep {/^\$1\$/} qw($prot) } print if \$c' $target_seqs > $exonerate_query");
+    system("perl -ne 'if(/^>(\\S+)/) { \$c = grep {/^\$1\$/} qw($prot) } print if \$c' $assemdir/target_proteins.fasta > $exonerate_query");
 
     # exonerate query: the target's original peptide sequence
     # target: the assembled exon DNA sequence

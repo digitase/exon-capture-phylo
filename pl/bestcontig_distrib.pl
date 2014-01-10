@@ -3,15 +3,13 @@ use strict;
 
 use List::Util qw(max min);
 
-my ($lib, $assemdir, $libfil, $target_exons_file, $exonlist, $all_target_seqs, $blastdb, $minoverlap) = @ARGV;
+my ($lib, $assemdir, $all_exons_file, $exonlist, $blastdb, $minoverlap) = @ARGV;
 
 # Create the target BLAST database unless it already exists
 my $blast_dbs_dir = $assemdir . "/blast_dbs/";
-chdir("$blast_dbs_dir") or die "Cannot chdir to $blast_dbs_dir\n";
-unless(-e "$blastdb.pin") {
-    system("makeblastdb -dbtype prot -in $all_target_seqs -out $blastdb");
+unless(-e "$blast_dbs_dir/$blastdb.pin") {
+    system("makeblastdb -dbtype prot -in $assemdir/all_proteins.fasta -out $blast_dbs_dir/$blastdb");
 }
-chdir("$assemdir") or die "Cannot chdir to $assemdir\n";
 
 # Grab target exon IDs
 open EXONS, "<$exonlist" or die "Could not open list of target exons file $exonlist";
@@ -33,14 +31,13 @@ foreach my $exon (@exons) {
         my $bestcontig_distrib_dir = "$assemlib/$prot/${prot}_bestcontig_distrib/";
         unless(-e $bestcontig_distrib_dir or mkdir $bestcontig_distrib_dir) { die "Could not make $bestcontig_distrib_dir\n"; }
 
-        # TODO add this to the pipeline; combine all exons into a file, don't use a dir
-        # get overlap between target exon and anolis
-
+        # Get exon sequence from all exons file
         my $exonerate_target = "$bestcontig_distrib_dir/$exon_name.fasta";
-        system("perl -ne 'if(/^>(\\S+)/) { \$c = grep {/^\$1\$/} qw($exon) } print if \$c' $target_exons_file > $exonerate_target");
+        system("perl -ne 'if(/^>(\\S+)/) { \$c = grep {/^\$1\$/} qw($exon) } print if \$c' $all_exons_file > $exonerate_target");
 
         my $exonerate_query = "$assemlib/$prot/${prot}_catcontigs/$prot.fasta";
         my $exonerate_out = "$bestcontig_distrib_dir/$exon_name.exonerated.fasta";
+        # get overlap between target exon and anolis
         my ($region_start, $region_end) = getTargetRegionInProtein($exonerate_query, $exonerate_target, $exonerate_out);
 
         # get overlaps between assembled contigs and anolis, then filter for those contigs with good overlap with target region
@@ -111,10 +108,13 @@ sub filterExoneratedContigs {
             die "Invalid exonerate sequence ID line $contig_name_line in $exonerated_contigs\n";
         }
 
+        # Move on if there is no overlap
         my $overlap = max (0, ((min ($region_end, $e)) - (max ($region_start, $b))));
-        my $overlap_ratio = $overlap / ($region_end - $region_start);
+        next unless $overlap;
 
-        if ($overlap >= $minoverlap) {
+        # Check overlap proportion
+        my $overlap_ratio = $overlap / ($region_end - $region_start);
+        if ($overlap_ratio >= $minoverlap) {
             $contig_seq =~ s/\n//g;
             print OUT ">${exon_name}_contig_$contig_num\n$contig_seq\n";
             $contig_num++;
