@@ -10,13 +10,13 @@ use strict;
 
 my ($assemdir, $libfil, $protfil, $exonlist) = @ARGV;
 
-my $gathercontigs_dir   = "$assemdir/gathercontigs_by_target_exon/";
+my $gathercontigs_dir = "$assemdir/gathercontigs_by_target_exon/";
 unless(-e $gathercontigs_dir or mkdir $gathercontigs_dir) { die "could not make $gathercontigs_dir \n"; }    
 
-my $alldir   = "$gathercontigs_dir/all_contigs/";
+my $alldir = "$gathercontigs_dir/all_contigs/";
 unless(-e $alldir or mkdir $alldir) { die "could not make $alldir \n"; }    
 
-my $bestdir   = "$gathercontigs_dir/best_contigs/";
+my $bestdir = "$gathercontigs_dir/best_contigs/";
 unless(-e $bestdir or mkdir $bestdir) { die "could not make $bestdir \n"; }    
 
 open LIBS, "<$libfil" or die "could not open the lib file";

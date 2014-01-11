@@ -21,10 +21,8 @@ echo gathercontigs at $(date)
 perl "$SCRIPT_DIR/pl/gathercontigs.pl" "$OUT_DIR" "$LIBRARIES_LIST" "$TARGET_PROTEIN_SEQS_LIST" \
                                        "$TARGET_EXON_SEQS_LIST" \
 
-exit
 # 5.2 gather contigs from each exon by sample
 echo best2ref at $(date)
-perl "$SCRIPT_DIR/pl/best2refs.pl" "$OUT_DIR" "$LIBRARIES_LIST" \
-                                   "$TARGET_EXON_SEQS_DIR" "$TARGET_EXON_SEQS_LIST"
+perl "$SCRIPT_DIR/pl/best2refs.pl" "$OUT_DIR" "$LIBRARIES_LIST" "$TARGET_EXON_SEQS_LIST"
 
 exit        

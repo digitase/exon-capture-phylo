@@ -1,5 +1,6 @@
 # blastx reads against targets
 # reads with significant hits to each exon per file
+# BLAT (BLAST-like Alignment Tool) is a sequence alignment tool similar to BLAST but structured differently. BLAT quickly finds similarity in DNA and protein but it needs an exact or nearly-exact match to find a hit. Therefore Blat is not as flexible as BLAST. Since BLAST can find much more remote matches than Blat, it is the recommended tool when searching more distantly related sequences.
 
 use strict;
 use warnings;
