@@ -22,7 +22,7 @@ my $gathercontigs_dir = "$assemdir/gathercontigs_by_target_exon/";
 
 foreach my $lib (@libs) {
 
-    my $reffil = "$assemdir/$lib/${lib}_best2refs.refs.fasta";
+    my $reffil = "$assemdir/$lib/${lib}_best2refs.fasta";
     open REFS, ">$reffil" or die "Could not open the output best2refs fasta file $reffil\n";
 
     foreach my $exon (@exons) {
@@ -44,7 +44,8 @@ foreach my $lib (@libs) {
                 my $seq = $contig[1];
                 print REFS ">" . $exon_name ."\n". $seq ."\n"; 
             } elsif (scalar(@contig) == 0) {
-                warn "Warning: No best contig for $exon_name: no assembly, or failed reciprocal best-hit BLAST\n";
+                # This is fine
+                # warn "[WARNING best2refs] No best contig for $exon_name\n";
             } else {
                 die "Incorrect number of contigs/contig format in $bestcontigfil\n";
             }

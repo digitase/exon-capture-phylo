@@ -20,6 +20,8 @@ echo Started call_variants.sh with "$sample_name" at $(date)
 echo mapsnp at $(date) 
 perl "$SCRIPT_DIR/pl/mapsnp.pl" "$sample_name" "$LIBRARIES_DIR" "$OUT_DIR"
 
+exit
+
 echo gatkSNPcalls at $(date)
 perl "$SCRIPT_DIR/pl/gatkSNPcalls.pl" "$sample_name" "$LIBRARIES_DIR" "$OUT_DIR" \
                                       "$PICARD_DIR" "$GATK_DIR"

@@ -3,7 +3,7 @@ use strict;
 
 my ($lib, $assemdir, $target_seqs_list, @k_values) = @ARGV;
 
-open PROTS, "<$target_seqs_list" or die "could not open the lib file";
+open PROTS, "<$target_seqs_list" or die "Could not open target proteins list $target_seqs_list\n";
 my @prots = <PROTS>;
 chomp(@prots); 
 close(PROTS);
@@ -41,17 +41,7 @@ foreach my $prot (@prots) {
     my $exonerated_contigs = "$catcontigs_dir/${prot}_velvet_contigs.cap3ed.exonerated.fasta";
     system("exonerate --model protein2genome --query $exonerate_query --target $cap3ed_contigs --showvulgar no --showalignment no --ryo $ryo > $exonerated_contigs");
 
-    #sleep(2");
-
-    # while(<>) {
-        
-        # if(/^>(\S+)/) {
-            # $c = grep {/^$1$/} "ID";
-        # }
-        # print if $c;
-    
-    # }
-
+    #sleep(2);
 }
 
 

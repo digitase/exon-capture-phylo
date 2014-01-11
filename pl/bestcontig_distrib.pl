@@ -32,10 +32,10 @@ foreach my $exon (@exons) {
         unless(-e $bestcontig_distrib_dir or mkdir $bestcontig_distrib_dir) { die "Could not make $bestcontig_distrib_dir\n"; }
 
         # Get exon sequence from all exons file
+        my $exonerate_query = "$assemlib/$prot/${prot}_catcontigs/$prot.fasta";
         my $exonerate_target = "$bestcontig_distrib_dir/$exon_name.fasta";
         system("perl -ne 'if(/^>(\\S+)/) { \$c = grep {/^\$1\$/} qw($exon) } print if \$c' $all_exons_file > $exonerate_target");
 
-        my $exonerate_query = "$assemlib/$prot/${prot}_catcontigs/$prot.fasta";
         my $exonerate_out = "$bestcontig_distrib_dir/$exon_name.exonerated.fasta";
         # get overlap between target exon and anolis
         my ($region_start, $region_end) = getTargetRegionInProtein($exonerate_query, $exonerate_target, $exonerate_out);
@@ -71,7 +71,7 @@ sub getTargetRegionInProtein {
     # Get beginning and end of the query region in the alignment
     my $nameline = $lines[0];
     if (scalar(@lines) == 0) {
-        warn "Warning: No exonerate alignment between $exonerate_query and $exonerate_target detected\n";
+        warn "[WARNING bestcontig_distrib] No prot-exon exonerate alignment between $exonerate_query and $exonerate_target\n";
         return("0", "0");
     } elsif ($nameline =~ / b(\d+) e(\d+) p/) {
         my $b = $1; my $e = $2;
@@ -100,7 +100,7 @@ sub filterExoneratedContigs {
 
         my $contig_name; my $b; my $e; 
         if (scalar(@contig_file_lines) == 0) {
-            warn "Warning: No exonerate alignment in $exonerated_contigs detected\n";
+            warn "[WARNING bestcontig_distrib] No prot-contig exonerate alignment in $exonerated_contigs detected\n";
             $contig_name = ""; $b = "0"; $e = "0";
         } elsif ($contig_name_line =~ /^>(\S+) b(\d+) e(\d+) p/) {
             $contig_name = $1; $b = $2; $e = $3;
@@ -118,6 +118,8 @@ sub filterExoneratedContigs {
             $contig_seq =~ s/\n//g;
             print OUT ">${exon_name}_contig_$contig_num\n$contig_seq\n";
             $contig_num++;
+        } else {
+            warn "[WARNING bestcontig_distrib] $contig failed filtering. Overlap=$overlap_ratio. Required:$minoverlap\n";
         }
     }
     close OUT;
@@ -163,6 +165,8 @@ sub getBestContig {
             if ($name eq $bestcontig) {
                 $tmpseq =~ s/\n//g;
                 print BEST ">$name\n$tmpseq\n";
+            } else {
+                warn "[WARNING bestcontig_distrib] $name failed reciprocal best-hit blast. Best hit was $bestcontig\n";
             }
         }
     }
