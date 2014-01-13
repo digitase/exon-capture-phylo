@@ -8,70 +8,71 @@ use strict;
 
 my ($lib, $readdir, $assemdir, $picard_dir, $gatk_dir) = @ARGV;
 
-my $mapdir = $assemdir . "/map/";
-my $reffil = $assemdir . $lib . "/" . $lib . "_refs.fasta";
-my $bam    = $mapdir . $lib . ".sorted.bam";
+my $gatkSNPcalls_dir = "$assemdir/$lib/${lib}_gatkSNPcalls/";
+unless(-e $gatkSNPcalls_dir or mkdir $gatkSNPcalls_dir) { die "Unable to create $gatkSNPcalls_dir\n"; }
 
-my $bamrg  = rg($lib, $bam, $picard_dir);
-my $ibamrg = indbam($bamrg);
+my $mapdir = "$assemdir/$lib/${lib}_mapsnp/";
+my $reffil = "$assemdir/$lib/${lib}_best2refs.fasta";
+my $sorted_bam = "$mapdir/$lib.sorted.bam";
 
-my $vcffilt = callGATK($ibamrg, $reffil, $picard_dir, $gatk_dir);
+my $bamrg  = prepareBAMandRef($lib, $reffil, $sorted_bam, $gatkSNPcalls_dir, $picard_dir);
+my $vcffilt = callGATK($bamrg, $reffil, $gatk_dir, $gatkSNPcalls_dir, $lib);
 
 # java -jar /home/jgb/software/picard/picard-tools-1.88/CreateSequenceDictionary.jar R=SP02B_indexing26_finalref.fa O=SP02B_indexing26_finalref.dict
 # samtools faidx SP02B_indexing26_finalref.fa
 
-sub rg {
-    my ($lib, $bam, $picard_dir)   = @_;
-    my $bamrg         = $bam . ".rg";
+sub prepareBAMandRef {
+    my ($lib, $ref, $bam, $gatkSNPcalls_dir, $picard_dir) = @_;
 
-    # names are of this format SP04_indexing12
-    my ($lane, $samp) = split(/_/,$lib);
+    # Sample names are of this format SP04_indexing12
+    my ($lane, $samp) = split(/_/, $lib);
+    my $ibamrg = "$gatkSNPcalls_dir/$lib.ReadGrouped.bam";
 
+    # Add read groups to BAM
     # Set max heap size 8G
     my $AddOrRepl = "java -Xmx8g -jar $picard_dir/AddOrReplaceReadGroups.jar";
-    system("$AddOrRepl INPUT=$bam OUTPUT=$bamrg RGID=$lib RGLB=$lib RGPU=$lane RGPL=illumina RGSM=$samp");   
-    return($bamrg);
-}
+    system("$AddOrRepl INPUT=$bam OUTPUT=$ibamrg RGID=$lib RGLB=$lib RGPU=$lane RGPL=illumina RGSM=$samp");   
 
-sub indbam {
-    my $bamrg   = $_[0];
-    my $ibamrg = $bamrg;
-    $ibamrg =~ s/\.bam\.rg//;
-    $ibamrg = $ibamrg . "gatk.bam";
-    system("mv $bamrg $ibamrg");
+    # Index BAM file
     system("samtools index $ibamrg");
+
+    # Creating the fasta sequence dictionary file
+    (my $dict = $ref) =~ s/\.fasta$/\.dict/;
+    unless (-e $dict) { system("java -Xmx8g -jar $picard_dir/CreateSequenceDictionary.jar R=$ref O=$dict"); }
+
+    # Index reference FASTA
+    system("samtools faidx $ref");
+
     return($ibamrg);
 }
 
 sub callGATK {
-    my ($ibamrg, $ref, $picard_dir, $gatk_dir) = @_;
-    my $seqdict = "java -Xmx8g -jar $picard_dir/CreateSequenceDictionary.jar";
+    my ($ibamrg, $ref, $gatk_dir, $gatkSNPcalls_dir, $lib) = @_;
+
     my $gatk  = "java -Xmx8g -jar $gatk_dir/GenomeAnalysisTK.jar";
-    my $dict  = $ref;
-       $dict  =~ s/\.fasta/\.dict/; 
 
-    # Faster
-    # my $ug    = "UnifiedGenotyper";
-    my $hc    = "HaplotypeCaller";
+    # Variant calls
+    my $ibamrg_basename  = $ibamrg;
+    $ibamrg_basename =~ s/\.bam$//;
 
-    my $rbp   = "ReadBackedPhasing";
-    my $va    = "VariantAnnotator";
-    my $vf    = "VariantFiltration";
-    my $doc   = "DepthOfCoverage";
+    my $vcf = "$ibamrg_basename.vcf";
+    system("$gatk -R $ref -T HaplotypeCaller  -I $ibamrg -o $vcf");
 
-    my $vcf  = $ibamrg;
-    $vcf =~ s/\.bam/\.vcf/;
+    my $phased_vcf = "$ibamrg_basename.ReadBackedPhased.vcf";
+    system("$gatk -R $ref -T ReadBackedPhasing -I $ibamrg --variant $vcf --min_base_quality_score 21 -o $phased_vcf");
 
-    unless (-e $dict) { system("$seqdict R=$ref O=$dict"); }
-    system("$gatk -R $ref -T $hc  -I $ibamrg -o $vcf");
-    system("$gatk -R $ref -T $rbp -I $ibamrg --variant $vcf --min_base_quality_score 21 -o $vcf.rbp");
-    system("$gatk -R $ref -T $va  -I $ibamrg -A DepthPerAlleleBySample -A HaplotypeScore --variant $vcf.rbp -o $vcf.annot");
-    system("$gatk -R $ref -T $vf  -o $vcf.filt --variant $vcf.annot --filterName depth --filterExpression \"DP \< 16\"");
-    system("$gatk -R $ref -T $doc -I $ibamrg -o $ibamrg.cov"); 
+    my $annotated_vcf = "$ibamrg_basename.ReadBackedPhased.VariantAnnotated.vcf";
+    system("$gatk -R $ref -T VariantAnnotator  -I $ibamrg -A DepthPerAlleleBySample -A HaplotypeScore --variant $phased_vcf -o $annotated_vcf");
 
-    my $vcffilt = "$vcf.filt";
+    my $filtered_vcf = "$ibamrg_basename.ReadBackedPhased.VariantAnnotated.VariantFiltered.vcf";
+    system("$gatk -R $ref -T VariantFiltration  -o $filtered_vcf --variant $annotated_vcf --filterName depth --filterExpression \"DP \< 16\"");
 
-    return($vcffilt);
+    # DepthOfCoverage
+    my $depth_of_coverage_dir = "$gatkSNPcalls_dir/${lib}_DepthOfCoverage/";
+    unless(-e $depth_of_coverage_dir or mkdir $depth_of_coverage_dir) { die "Unable to create $depth_of_coverage_dir\n"; }
+    system("$gatk -R $ref -T DepthOfCoverage -I $ibamrg -o $depth_of_coverage_dir/$ibamrg_basename.DepthOfCoverageTable"); 
+
+    return($filtered_vcf);
 }
 
 __END__;

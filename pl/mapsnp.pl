@@ -16,8 +16,6 @@ system("bowtie2-build $reffil $bowtie2_index_name > $mapdir/${lib}_best2refs.bow
 
 my $sorted_bam = mapFiles($readdir, $lib, $bowtie2_index_name, $mapdir);
 
-callVariants($lib, $mapdir, $sorted_bam, $reffil);
-
 # TODO unhardcode file formats
 sub mapFiles {
     my ($readdir, $lib, $bowtie2_index_name, $mapdir) = @_;
@@ -32,15 +30,6 @@ sub mapFiles {
         bowtie2 -5 5 -3 5 -p 1 -x $bowtie2_index_name -U $file1,$file2,$fileu |
         samtools view -bS - | samtools sort - $sorted_bam
     ));
-    return($sorted_bam);
+    return("$sorted_bam.bam");
 }
 
-# Index fasta file for GATK
-sub callVariants {
-    my ($lib, $mapdir, $bam, $refs) = @_;
-    
-    my $outVCF = $mapdir . $lib . '.vcf';
-    my $call1 = system("samtools faidx $refs");
-    #my $call2 = system("samtools mpileup -uf $refs $bam | bcftools view -bvcg - > $lib.var.raw.bcf");
-    #my $call3 = system("bcftools view $lib.var.raw.bcf | vcfutils.pl varFilter -w 0 > $outVCF");
-}

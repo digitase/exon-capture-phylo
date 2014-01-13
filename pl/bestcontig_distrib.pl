@@ -48,7 +48,7 @@ foreach my $exon (@exons) {
         filterExoneratedContigs($exonerated_contigs, $filtered_contigs, $region_start, $region_end, $exon_name, $minoverlap);
 
         # determine best contig for the exon by blastx
-        getBestContig($filtered_contigs, $prot, $blastdb, $blast_dbs_dir, $exon_name, $minoverlap);
+        getBestContig($filtered_contigs, $prot, $blastdb, $blast_dbs_dir, $exon_name);
 
     } else {
         print "Exon naming format incorrect for: $exon\n";
@@ -119,7 +119,7 @@ sub filterExoneratedContigs {
             print OUT ">${exon_name}_contig_$contig_num\n$contig_seq\n";
             $contig_num++;
         } else {
-            warn "[WARNING bestcontig_distrib] $contig failed filtering. Overlap=$overlap_ratio. Required:$minoverlap\n";
+            warn "[WARNING bestcontig_distrib] $contig_name failed filtering. Overlap=$overlap_ratio. Required:$minoverlap\n";
         }
     }
     close OUT;
@@ -127,7 +127,7 @@ sub filterExoneratedContigs {
 
 sub getBestContig {
     # Blast the contig against all anolis proteisn
-    my ($filtered_contigs_file, $prot, $blastdb, $blast_dbs_dir) = @_;
+    my ($filtered_contigs_file, $prot, $blastdb, $blast_dbs_dir, $exon_name) = @_;
 
     my $filtered_contigs_basename = $filtered_contigs_file;
     $filtered_contigs_basename =~ s/\.fasta//;
@@ -143,6 +143,7 @@ sub getBestContig {
     my $bestprothit = "";
     my $bestcontig  = "";
 
+    # Get info for the best blast hit score
     foreach my $line (@blastlines) {
        my @linbits = split(/\t/, $line);
        if ($linbits[11] > $maxbitscore) {
@@ -165,10 +166,10 @@ sub getBestContig {
             if ($name eq $bestcontig) {
                 $tmpseq =~ s/\n//g;
                 print BEST ">$name\n$tmpseq\n";
-            } else {
-                warn "[WARNING bestcontig_distrib] $name failed reciprocal best-hit blast. Best hit was $bestcontig\n";
             }
         }
+    } else {
+        warn "[WARNING bestcontig_distrib] The best contig $bestcontig failed reciprocal best-hit blast. Best hit was to $bestprothit\n";
     }
 }
   
