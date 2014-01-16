@@ -8,23 +8,22 @@ use warnings;
 # Sample name, samples directory, output directory, FASTA with all the targets to make the blast db, BLAST database name
 my ($lib, $readdir, $assemdir, $all_prot_seqs, $adb, $target_seqs_list) = @ARGV;
 
-# Copy in all prots file, using the first field as the ID
-system("awk '{print \$1}' $all_prot_seqs > $assemdir/all_proteins.fasta");
+# # Copy in all prots file, using the first field as the ID
+# system("awk '{print \$1}' $all_prot_seqs > $assemdir/all_proteins.fasta");
 
-# Create blast database directory
-my $blast_dbs_dir = $assemdir . "/blast_dbs/";
-unless(-d $blast_dbs_dir or mkdir $blast_dbs_dir) {
-    die "Could not create blast database output directory $blast_dbs_dir\n";
-}
+# # Create blast database directory
+# unless(-d $blast_dbs_dir or mkdir $blast_dbs_dir) {
+    # die "Could not create blast database output directory $blast_dbs_dir\n";
+# }
 
-# Extract sequences in target list from proteins file
-my $target_seqs = "$assemdir/target_proteins.fasta";
-system("perl -ne 'if (/^>(\\S+)/) {\$c=\$i{\$1}}\$c?print:chomp;\$i{\$_}=1 if \@ARGV' $target_seqs_list $assemdir/all_proteins.fasta > $target_seqs");
+# # Extract sequences in target list from proteins file
+# my $target_seqs = "$assemdir/target_proteins.fasta";
+# system("perl -ne 'if (/^>(\\S+)/) {\$c=\$i{\$1}}\$c?print:chomp;\$i{\$_}=1 if \@ARGV' $target_seqs_list $assemdir/all_proteins.fasta > $target_seqs");
 
-# Create the target BLAST database unless it already exists
-unless(-e "$blast_dbs_dir/$adb.pin") {
-    system("makeblastdb -dbtype prot -in $target_seqs -out $blast_dbs_dir/$adb");
-}
+# # Create the target BLAST database unless it already exists
+# unless(-e "$blast_dbs_dir/$adb.pin") {
+    # system("makeblastdb -dbtype prot -in $target_seqs -out $blast_dbs_dir/$adb");
+# }
 
 # Expectation value for blastx
 my $eval = "1e-9";
@@ -33,9 +32,8 @@ my $np = "16";
 # Use blastall blastx instead of blast+ blastx?
 my $use_legacy_blast = 1;
 
-# First iteration
-my $assem_iter_1 = filtAssemb($readdir, $assemdir, $blast_dbs_dir, $lib, $adb, $eval, $np, $use_legacy_blast);
-# Continue to iterate?
+my $blast_dbs_dir = $assemdir . "/blast_dbs/";
+filtAssemb($readdir, $assemdir, $blast_dbs_dir, $lib, $adb, $eval, $np, $use_legacy_blast);
 
 sub filtAssemb {
     my ($readdir, $assemdir, $blast_dbs_dir, $lib, $adb, $eval, $np, $use_legacy_blast) = @_;
@@ -79,11 +77,13 @@ sub blastProts {
     my ($fil, $blast, $fasta, $blast_dbs_dir, $adb, $eval, $np, $use_legacy_blast) = @_;
     
     my $blast_call;
+    my $start_time = localtime();
+
     if($use_legacy_blast) {
-        print "Generating $blast with legacy BLAST\n";
+        print "Blasting $fil against $adb with legacy BLAST at $start_time\n";
         $blast_call = "blastall -p blastx -d $blast_dbs_dir/$adb -e $eval -m 8 -I T"
     } else {
-        print "Generating $blast BLAST+\n";
+        print "Blasting $fil against $adb with BLAST+ at $start_time\n";
         $blast_call = "blastx -db $blast_dbs_dir/$adb -evalue $eval -outfmt 6 -show_gis"
     }
 
@@ -110,6 +110,7 @@ sub getbest {
     while (<FA>)
     {
         my $seqnm = $_;
+        # This is fine as read files have alternating ID read lines
         my $seq   = <FA>;
         $seqnm =~ s/>//;
         chomp($seqnm); chomp($seq);

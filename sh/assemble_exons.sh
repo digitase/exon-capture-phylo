@@ -16,16 +16,13 @@
 #     select one exon by reciprocal best hit
 
 # Include the config file, which is in valid bash format
-# source "test.config"
 sample_name="$1"
 CONFIG_FILE="$2"
 source "$CONFIG_FILE"
 echo Started assemble_exons.sh with "$sample_name" at $(date)
 
 # 1. assembleByProt
-# TODO I/O intensive: produces an alignment for each exon for each sample
-# Possibly pipe
-echo assembleByProt with blastx database name "$TARGET_PROTEIN_BLAST_DB_NAME"
+echo assembleByProt at $(date)
 perl "$SCRIPT_DIR/pl/assembleByProtv2.pl" "$sample_name" "$LIBRARIES_DIR" "$OUT_DIR" \
                                           "$ALL_PROTEIN_SEQS" "$TARGET_PROTEIN_BLAST_DB_NAME" "$TARGET_PROTEIN_SEQS_LIST"
 
@@ -37,7 +34,6 @@ printf "%s\n" "${VELVET_K_VALUES[@]}" | xargs -n 1 -I {} perl "$SCRIPT_DIR/pl/ca
 # 3. catcontigs
 echo catContigs at $(date)
 export PATH=$PATH:"$CAP3_DIR"
-
 perl "$SCRIPT_DIR/pl/catcontigs.pl" "$sample_name" "$OUT_DIR" \
                                     "$TARGET_PROTEIN_SEQS_LIST" \
                                     ${VELVET_K_VALUES[@]}

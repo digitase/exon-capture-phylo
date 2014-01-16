@@ -6,7 +6,7 @@
 #$ -N job_exon_capture_phylo
 #$ -R y
 #$ -l virtual_free=10G,h_vmem=12G
-#$ -q bigmem.q
+# -q bigmem.q
 # -pe threads 5
 # -t 1-1
 # -tc 20 
@@ -50,13 +50,17 @@ fi
 
 cd "$OUT_DIR" || exit 
 
+# prepare data
+"$SCRIPT_DIR/sh/prepare_data.sh" "$SCRIPT_DIR/$CONFIG_FILE"
+
 # assemble contigs
-# < "$LIBRARIES_LIST" xargs -n 1 --max-procs 20 -I {} "$SCRIPT_DIR/sh/assemble_exons.sh" {} "$SCRIPT_DIR/$CONFIG_FILE"
+< "$LIBRARIES_LIST" xargs -n 1 --max-procs 20 -I {} "$SCRIPT_DIR/sh/assemble_exons.sh" {} "$SCRIPT_DIR/$CONFIG_FILE"
 
 # gather contigs by exon and by sample
-# "$SCRIPT_DIR/sh/gather_exons.sh" "$SCRIPT_DIR/$CONFIG_FILE"
-
+"$SCRIPT_DIR/sh/gather_exons.sh" "$SCRIPT_DIR/$CONFIG_FILE"
+exit
 # call variants
 < "$LIBRARIES_LIST" xargs -n 1 --max-procs 20 -I {} "$SCRIPT_DIR/sh/call_variants.sh" {} "$SCRIPT_DIR/$CONFIG_FILE"
 
+echo Finished at $(date)
 exit

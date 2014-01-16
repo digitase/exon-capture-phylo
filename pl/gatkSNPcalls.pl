@@ -18,9 +18,6 @@ my $sorted_bam = "$mapdir/$lib.sorted.bam";
 my $bamrg  = prepareBAMandRef($lib, $reffil, $sorted_bam, $gatkSNPcalls_dir, $picard_dir);
 my $vcffilt = callGATK($bamrg, $reffil, $gatk_dir, $gatkSNPcalls_dir, $lib);
 
-# java -jar /home/jgb/software/picard/picard-tools-1.88/CreateSequenceDictionary.jar R=SP02B_indexing26_finalref.fa O=SP02B_indexing26_finalref.dict
-# samtools faidx SP02B_indexing26_finalref.fa
-
 sub prepareBAMandRef {
     my ($lib, $ref, $bam, $gatkSNPcalls_dir, $picard_dir) = @_;
 
@@ -52,25 +49,23 @@ sub callGATK {
     my $gatk  = "java -Xmx8g -jar $gatk_dir/GenomeAnalysisTK.jar";
 
     # Variant calls
-    my $ibamrg_basename  = $ibamrg;
-    $ibamrg_basename =~ s/\.bam$//;
+    my $ibamrg_basepath  = $ibamrg;
+    $ibamrg_basepath =~ s/\.bam$//;
 
-    my $vcf = "$ibamrg_basename.vcf";
+    my $vcf = "$ibamrg_basepath.vcf";
     system("$gatk -R $ref -T HaplotypeCaller  -I $ibamrg -o $vcf");
 
-    my $phased_vcf = "$ibamrg_basename.ReadBackedPhased.vcf";
+    my $phased_vcf = "$ibamrg_basepath.ReadBackedPhased.vcf";
     system("$gatk -R $ref -T ReadBackedPhasing -I $ibamrg --variant $vcf --min_base_quality_score 21 -o $phased_vcf");
 
-    my $annotated_vcf = "$ibamrg_basename.ReadBackedPhased.VariantAnnotated.vcf";
+    my $annotated_vcf = "$ibamrg_basepath.ReadBackedPhased.VariantAnnotated.vcf";
     system("$gatk -R $ref -T VariantAnnotator  -I $ibamrg -A DepthPerAlleleBySample -A HaplotypeScore --variant $phased_vcf -o $annotated_vcf");
 
-    my $filtered_vcf = "$ibamrg_basename.ReadBackedPhased.VariantAnnotated.VariantFiltered.vcf";
+    my $filtered_vcf = "$ibamrg_basepath.ReadBackedPhased.VariantAnnotated.VariantFiltered.vcf";
     system("$gatk -R $ref -T VariantFiltration  -o $filtered_vcf --variant $annotated_vcf --filterName depth --filterExpression \"DP \< 16\"");
 
     # DepthOfCoverage
-    my $depth_of_coverage_dir = "$gatkSNPcalls_dir/${lib}_DepthOfCoverage/";
-    unless(-e $depth_of_coverage_dir or mkdir $depth_of_coverage_dir) { die "Unable to create $depth_of_coverage_dir\n"; }
-    system("$gatk -R $ref -T DepthOfCoverage -I $ibamrg -o $depth_of_coverage_dir/$ibamrg_basename.DepthOfCoverageTable"); 
+    system("$gatk -R $ref -T DepthOfCoverage -I $ibamrg -o $ibamrg_basepath.DepthOfCoverageTable"); 
 
     return($filtered_vcf);
 }

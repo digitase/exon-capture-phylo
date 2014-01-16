@@ -6,18 +6,17 @@ use List::Util qw(max min);
 my ($lib, $assemdir, $all_exons_file, $exonlist, $blastdb, $minoverlap) = @ARGV;
 
 # Create the target BLAST database unless it already exists
+my $assemlib = "$assemdir/$lib/";
 my $blast_dbs_dir = $assemdir . "/blast_dbs/";
-unless(-e "$blast_dbs_dir/$blastdb.pin") {
-    system("makeblastdb -dbtype prot -in $assemdir/all_proteins.fasta -out $blast_dbs_dir/$blastdb");
-}
+# unless(-e "$blast_dbs_dir/$blastdb.pin") {
+    # system("makeblastdb -dbtype prot -in $assemdir/all_proteins.fasta -out $blast_dbs_dir/$blastdb");
+# }
 
 # Grab target exon IDs
 open EXONS, "<$exonlist" or die "Could not open list of target exons file $exonlist";
 my @exons = <EXONS>;
 chomp(@exons);
 close(EXONS);
-
-my $assemlib = "$assemdir/$lib/";
 
 foreach my $exon (@exons) {
 
@@ -108,18 +107,15 @@ sub filterExoneratedContigs {
             die "Invalid exonerate sequence ID line $contig_name_line in $exonerated_contigs\n";
         }
 
-        # Move on if there is no overlap
         my $overlap = max (0, ((min ($region_end, $e)) - (max ($region_start, $b))));
-        next unless $overlap;
-
-        # Check overlap proportion
         my $overlap_ratio = $overlap / ($region_end - $region_start);
+
         if ($overlap_ratio >= $minoverlap) {
             $contig_seq =~ s/\n//g;
             print OUT ">${exon_name}_contig_$contig_num\n$contig_seq\n";
             $contig_num++;
         } else {
-            warn "[WARNING bestcontig_distrib] $contig_name failed filtering. Overlap=$overlap_ratio. Required:$minoverlap\n";
+            warn "[WARNING bestcontig_distrib] $exon_name $contig_name_line failed filtering. Overlap=$overlap_ratio. Required=$minoverlap\n";
         }
     }
     close OUT;
@@ -138,6 +134,7 @@ sub getBestContig {
     
     open BLAST, "<$blastout" or die "Could not open blastx output file $blastout\n";
     my @blastlines = <BLAST>;
+    close BLAST;
     chomp(@blastlines);
     my $maxbitscore = 0;
     my $bestprothit = "";
@@ -168,8 +165,11 @@ sub getBestContig {
                 print BEST ">$name\n$tmpseq\n";
             }
         }
+    } elsif (scalar(@blastlines) == 0) {
+        warn "[WARNING bestcontig_distrib] No blast hits in $blastout\n";
     } else {
         warn "[WARNING bestcontig_distrib] The best contig $bestcontig failed reciprocal best-hit blast. Best hit was to $bestprothit\n";
     }
+    close BEST;
 }
   

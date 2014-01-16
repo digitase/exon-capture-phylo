@@ -6,7 +6,6 @@
 #$ -N job_gather_exons
 
 # Include the config file, which is in valid bash format
-# source "test.config"
 CONFIG_FILE="$1"
 source $CONFIG_FILE
 
@@ -14,6 +13,8 @@ source $CONFIG_FILE
 #     for each exon, collect the best exon from each sample
 
 cd "$OUT_DIR"
+
+echo Started gather_exons.sh with at $(date)
 
 # 5.1 gatherContigs
 # TODO get rid of contig num file argument
