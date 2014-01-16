@@ -12,7 +12,7 @@ my $gatkSNPcalls_dir = "$assemdir/$lib/${lib}_gatkSNPcalls/";
 unless(-e $gatkSNPcalls_dir or mkdir $gatkSNPcalls_dir) { die "Unable to create $gatkSNPcalls_dir\n"; }
 
 my $mapdir = "$assemdir/$lib/${lib}_mapsnp/";
-my $reffil = "$assemdir/$lib/${lib}_best2refs.fasta";
+my $reffil = "$assemdir/$lib/${lib}_best2refs/${lib}_best2refs.fasta";
 my $sorted_bam = "$mapdir/$lib.sorted.bam";
 
 my $bamrg  = prepareBAMandRef($lib, $reffil, $sorted_bam, $gatkSNPcalls_dir, $picard_dir);

@@ -14,7 +14,7 @@ close VCF;
 my $vcf2ambigfasta_dir = "$assemdir/$lib/${lib}_vcf2ambigfasta/";
 unless(-e $vcf2ambigfasta_dir or mkdir $vcf2ambigfasta_dir) { die "Unable to create $vcf2ambigfasta_dir\n"; }
 
-my $reffil = "$assemdir/$lib/${lib}_best2refs.fasta";
+my $reffil = "$assemdir/$lib/${lib}_best2refs/${lib}_best2refs.fasta";
 my $ref_IN = Bio::SeqIO->new(-file => "<$reffil",
                              -format => "fasta",
                              -alphabet => "dna");

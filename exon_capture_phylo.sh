@@ -56,11 +56,11 @@ cd "$OUT_DIR" || exit
 # assemble contigs
 < "$LIBRARIES_LIST" xargs -n 1 --max-procs 20 -I {} "$SCRIPT_DIR/sh/assemble_exons.sh" {} "$SCRIPT_DIR/$CONFIG_FILE"
 
-# gather contigs by exon and by sample
-"$SCRIPT_DIR/sh/gather_exons.sh" "$SCRIPT_DIR/$CONFIG_FILE"
-
 # call variants
 < "$LIBRARIES_LIST" xargs -n 1 --max-procs 20 -I {} "$SCRIPT_DIR/sh/call_variants.sh" {} "$SCRIPT_DIR/$CONFIG_FILE"
+
+# gather contigs by exon and by sample
+# "$SCRIPT_DIR/sh/gather_exons.sh" "$SCRIPT_DIR/$CONFIG_FILE"
 
 echo Finished at $(date)
 exit

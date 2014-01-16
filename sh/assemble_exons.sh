@@ -45,4 +45,8 @@ perl "$SCRIPT_DIR/pl/bestcontig_distrib.pl" "$sample_name" "$OUT_DIR" \
                                             "$ALL_PROTEIN_BLAST_DB_NAME" \
                                             "$MIN_OVERLAP"
 
+# 5. gather best contigs from each exon
+echo best2ref at $(date)
+perl "$SCRIPT_DIR/pl/best2refs.pl" "$sample_name" "$OUT_DIR" "$TARGET_EXON_SEQS_LIST"
+
 exit

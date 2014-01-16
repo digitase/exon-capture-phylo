@@ -10,7 +10,7 @@ my ($lib, $readdir, $assemdir) = @ARGV;
 my $mapdir = "$assemdir/$lib/${lib}_mapsnp/";
 unless(-e $mapdir or mkdir $mapdir) { die "Unable to create $mapdir\n"; }
 
-my $reffil = "$assemdir/$lib/${lib}_best2refs.fasta";
+my $reffil = "$assemdir/$lib/${lib}_best2refs/${lib}_best2refs.fasta";
 my $bowtie2_index_name = "$mapdir/${lib}_best2refs";
 system("bowtie2-build $reffil $bowtie2_index_name > $mapdir/${lib}_best2refs.bowtie2build.log");
 
