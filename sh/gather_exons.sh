@@ -21,5 +21,7 @@ echo gathercontigs at $(date)
 perl "$SCRIPT_DIR/pl/gathercontigs.pl" "$OUT_DIR" "$LIBRARIES_LIST" "$TARGET_PROTEIN_SEQS_LIST" \
                                        "$TARGET_EXON_SEQS_LIST"
 
+echo gatherAmbigContigs at $(date)
+perl "$SCRIPT_DIR/pl/gatherAmbigContigs.pl" "$OUT_DIR" "$LIBRARIES_LIST" "$TARGET_EXON_SEQS_LIST"
 
 exit        

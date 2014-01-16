@@ -11,7 +11,7 @@ my ($lib, $readdir, $assemdir, $all_prot_seqs, $adb, $target_seqs_list) = @ARGV;
 # Expectation value for blastx
 my $eval = "1e-9";
 # Number of parallel blast processes to use
-my $np = "16";
+my $np = "8";
 # Use blastall blastx instead of blast+ blastx?
 my $use_legacy_blast = 1;
 

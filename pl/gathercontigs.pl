@@ -10,7 +10,7 @@ use strict;
 
 my ($assemdir, $libfil, $protfil, $exonlist) = @ARGV;
 
-my $gathercontigs_dir = "$assemdir/gathercontigs_by_target_exon/";
+my $gathercontigs_dir = "$assemdir/gathercontigs/";
 unless(-e $gathercontigs_dir or mkdir $gathercontigs_dir) { die "could not make $gathercontigs_dir \n"; }    
 
 my $alldir = "$gathercontigs_dir/all_contigs/";
@@ -70,7 +70,6 @@ foreach my $exonfile (@exons) {
                 }
 
             } else {
-
                 $contignum{$exon}{$lib} = 0;
             }
 

@@ -43,6 +43,7 @@ sub prepareBAMandRef {
     return($ibamrg);
 }
 
+# TODO Redirect err output from picard and stdout from gatk to log files
 sub callGATK {
     my ($ibamrg, $ref, $gatk_dir, $gatkSNPcalls_dir, $lib) = @_;
 
