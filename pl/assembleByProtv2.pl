@@ -8,23 +8,6 @@ use warnings;
 # Sample name, samples directory, output directory, FASTA with all the targets to make the blast db, BLAST database name
 my ($lib, $readdir, $assemdir, $all_prot_seqs, $adb, $target_seqs_list) = @ARGV;
 
-# # Copy in all prots file, using the first field as the ID
-# system("awk '{print \$1}' $all_prot_seqs > $assemdir/all_proteins.fasta");
-
-# # Create blast database directory
-# unless(-d $blast_dbs_dir or mkdir $blast_dbs_dir) {
-    # die "Could not create blast database output directory $blast_dbs_dir\n";
-# }
-
-# # Extract sequences in target list from proteins file
-# my $target_seqs = "$assemdir/target_proteins.fasta";
-# system("perl -ne 'if (/^>(\\S+)/) {\$c=\$i{\$1}}\$c?print:chomp;\$i{\$_}=1 if \@ARGV' $target_seqs_list $assemdir/all_proteins.fasta > $target_seqs");
-
-# # Create the target BLAST database unless it already exists
-# unless(-e "$blast_dbs_dir/$adb.pin") {
-    # system("makeblastdb -dbtype prot -in $target_seqs -out $blast_dbs_dir/$adb");
-# }
-
 # Expectation value for blastx
 my $eval = "1e-9";
 # Number of parallel blast processes to use

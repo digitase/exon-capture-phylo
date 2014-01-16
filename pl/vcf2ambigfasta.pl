@@ -4,94 +4,80 @@ use warnings;
 use strict;
 use Bio::SeqIO;
 
+my ($lib, $assemdir) = @ARGV;
 
-my $assemdir = "/home2/jgb/assemble/target/";
-my $mapdir   = "/home2/jgb/assemble/target/map/";
-
-my $lib = $ARGV[0];
-
-my $reffil = $assemdir . $lib . "/" . $lib . "_refs.fasta";
-my $seqfil = $assemdir . $lib . "/" . $lib . "_seqs.fasta";
-my $vcf    = $assemdir . $lib . "/" . $lib . ".sortedgatk.vcf.filt";
-my $vcfsnp = $vcf . ".snp";
-
-my $statfil= $seqfil . ".stat";
-
-my %loci;
-
-open(SEQ, ">$seqfil");
-open(STAT, ">$statfil");
-
-#my $gatk  = "java -Xmx8g -jar /home/jgb/software/GenomeAnalysisTK-nightly-2013-04-11-gb82c674/GenomeAnalysisTK.jar";
-#my $sv = "SelectVariants";
-#system("$gatk -R $ref -T $sv -o $vcfsnp --variant $vcf -selectType SNP -restrictAllelesTo BIALLELIC");
-#open(VCF, "<$vcfsnp");
-
-open(VCF, "<$vcf");
+my $vcf = "$assemdir/$lib/${lib}_gatkSNPcalls/$lib.ReadGrouped.ReadBackedPhased.VariantAnnotated.VariantFiltered.vcf";
+open(VCF, "<$vcf") or die "Could not open .vcf input file $vcf\n";
 my @vcf = <VCF>;
- 
-  # handle IO with bioperl
-  my $seqio = Bio::SeqIO-> new(
-                               -file     => $ref,
-                               -format => 'FASTA',
-                               );
+close VCF;
 
-  # loop through reference sequences
-  while( my $seq = $seqio->next_seq ) {
-  
-    my $name = $seq->id;
-    my $nameseq = $seq->seq();
+my $vcf2ambigfasta_dir = "$assemdir/$lib/${lib}_vcf2ambigfasta/";
+unless(-e $vcf2ambigfasta_dir or mkdir $vcf2ambigfasta_dir) { die "Unable to create $vcf2ambigfasta_dir\n"; }
+
+my $reffil = "$assemdir/$lib/${lib}_best2refs.fasta";
+my $ref_IN = Bio::SeqIO->new(-file => "<$reffil",
+                             -format => "fasta",
+                             -alphabet => "dna");
+
+my $output_reffil = "$vcf2ambigfasta_dir/${lib}_best2refs.vcf2ambigfasta_refs.fasta";
+my $ref_OUT = Bio::SeqIO->new(-file => ">$output_reffil",
+                              -format => "fasta",
+                              -alphabet => "dna");
+
+my $output_statsfil = "$vcf2ambigfasta_dir/${lib}_best2refs.vcf2ambigfasta_stats.fasta";
+open(STATS_OUT, ">$output_statsfil") or die "Could not open output reference file $output_statsfil\n";
+
+# loop through reference sequences
+while (my $ref = $ref_IN->next_seq) {
+    my $ref_name = $ref->display_id();
+    my $ref_seq = $ref->seq();
 
     my $hets = 0;
     my $alts = 0;
+    my $indel = 0;
     my $other = 0;
  
-    # get vcs for contig
-    my @refvcs = ();
+# 0                           1   2   3   4   5       6       7       
+# CHROM                       POS ID  REF ALT QUAL    FILTER  INFO    FORMAT  indexing4
+# ENSACAP00000021572_exon1    732 .   C   T   2344.77 PASS    AC=1;AF=0.500;AN=2;BaseQRankSum=-1.664;ClippingRankSum=-0.732;DP=153;FS=16.321;HaplotypeScore=6.6471;MLEAC=1;MLEAF=0.500;MQ=41.67;MQ0=0;MQRankSum=1.320;QD=15.33;ReadPosRankSum=1.222   GT:AD:GQ:PL:PQ  1|0:96,89:99:2373,0,2303:2115.71
+    foreach my $vcline (@vcf) {
+        my ($vcf_chrom_name, $snp_pos, undef, $a0, $a1, undef, $filter_result, undef, undef, $phasing_info) = split(/\t/, $vcline);
 
-    foreach my $vcline (@vcf)   
-    {
-       my @tmp = split(/\t/,$vcline);
-       if ($tmp[6] eq "PASS" )  # check the snp fits criteria
-       {
- 
-          my $a0; my $a1; my $aa;      
-          if ($name eq $tmp[0])
-          {              
-            $a0 = $tmp[3];
-            $a1 = $tmp[4];
-            
-            if ($tmp[9] ~= /^0[\|\/]1/) # if heterozygote             
-            { 
-              if (( $a0 eq "C" && $a1 eq "T" ) || ( $a1 eq "C" && $a0 eq "T" )) { $aa = "Y"; }
-              if (( $a0 eq "A" && $a1 eq "G" ) || ( $a1 eq "A" && $a0 eq "G" )) { $aa = "R"; }
-              if (( $a0 eq "A" && $a1 eq "T" ) || ( $a1 eq "A" && $a0 eq "T" )) { $aa = "W"; }
-              if (( $a0 eq "G" && $a1 eq "C" ) || ( $a1 eq "G" && $a0 eq "C" )) { $aa = "S"; }
-              if (( $a0 eq "T" && $a1 eq "G" ) || ( $a1 eq "T" && $a0 eq "G" )) { $aa = "K"; }
-              if (( $a0 eq "C" && $a1 eq "A" ) || ( $a1 eq "C" && $a0 eq "A" )) { $aa = "M"; }
-              $hets++
+        # check the snp fits criteria
+        if ($vcf_chrom_name eq $ref_name && $filter_result eq "PASS") {
+            # indel
+            if (length($a0) > 1 || length($a1) > 1) {
+                $indel++;
+            # if alternate homozygote         
+            } elsif ($phasing_info =~ /^1[\|\/]1/) { 
+                substr($ref_seq, $snp_pos-1, 1) = $a1;
+            # if heterozygote             
+            } elsif ($phasing_info =~ /^0[\|\/]1/) { 
+                my $aa;
+
+                if    ("$a0$a1" =~ /CT|TC/) { $aa = "Y"; }
+                elsif ("$a0$a1" =~ /AG|GA/) { $aa = "R"; }
+                elsif ("$a0$a1" =~ /GC|CG/) { $aa = "S"; }
+                elsif ("$a0$a1" =~ /AT|TA/) { $aa = "W"; }
+                elsif ("$a0$a1" =~ /GT|TG/) { $aa = "K"; }
+                elsif ("$a0$a1" =~ /AC|CA/) { $aa = "M"; }
+                else { die "Invalid base detected in $vcline\n"}
+
+                substr($ref_seq, $snp_pos-1, 1) = $aa;
+                $hets++;
+            } else {
+                $other++;
             }
-
-            if ($tmp[9] ~= /^1[\|\/]1/) # if alternate homozygote         
-            { 
-              if ( $a1 eq "A" || $a1 eq "C" || || $a1 eq "G" || || $a1 eq "T" ) {$aa = $a1;}
-              $alts++
-            }
-
-            if ( length($a0) > 1 || length($a1) > 1 )
-            { $other++ }
-
-            substr($nameseq, $tmp[1]-1, 1) = $aa;
-
-         } 
-       }
+        }
     }
 
-    print SEQ "> " . $name . "\n" . $nameseq . "\n";
-    my $nameseqlen = length($nameseq);
-    print STAT $name . "\t" . $hets . "\t" . $alts . "\t" . $other . "\t" . $nameseqlen . "\n";
-  }
-  close SEQ;
-  close STAT;
+    $ref->seq("$ref_seq");
+    $ref_OUT->write_seq($ref);
+
+    # print REFS_OUT ">$ref_name\n$ref_seq\n";
+
+    my $seqlen = length($ref_seq);
+    print STATS_OUT "$ref_name\tHET:$hets\tALT_HOMO:$alts\tINDEL:$indel\tSEQ_LEN:$seqlen\n";
 }
-close VCF;
+
+close STATS_OUT;

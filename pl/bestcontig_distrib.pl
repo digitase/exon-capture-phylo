@@ -8,9 +8,6 @@ my ($lib, $assemdir, $all_exons_file, $exonlist, $blastdb, $minoverlap) = @ARGV;
 # Create the target BLAST database unless it already exists
 my $assemlib = "$assemdir/$lib/";
 my $blast_dbs_dir = $assemdir . "/blast_dbs/";
-# unless(-e "$blast_dbs_dir/$blastdb.pin") {
-    # system("makeblastdb -dbtype prot -in $assemdir/all_proteins.fasta -out $blast_dbs_dir/$blastdb");
-# }
 
 # Grab target exon IDs
 open EXONS, "<$exonlist" or die "Could not open list of target exons file $exonlist";
