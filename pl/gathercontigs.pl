@@ -39,7 +39,7 @@ foreach my $exonfile (@exons) {
         my $exonallcontigs = $alldir . $exon . "_all_contigs.fasta";
         open ALLCON, ">$exonallcontigs" or die "cannot open a contig file";
 
-        my $exonbestcontigs = $bestdir . $exon . "_best_contig.fasta";
+        my $exonbestcontigs = $bestdir . $exon . "_best_contigs.fasta";
         open BESTCON, ">$exonbestcontigs" or die "cannot open a contig file";
 
         foreach my $lib (@libs) {

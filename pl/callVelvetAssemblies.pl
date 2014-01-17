@@ -4,7 +4,7 @@ use strict;
 my ($lib, $assemdir, $target_seqs_list, $k) = @ARGV;
 
 my $time = localtime();
-print "callVelvetAssemblies with k = $k at $time\n";
+print "callVelvetAssemblies on $lib with k = $k at $time\n";
 
 my $assemlib = "$assemdir/$lib/";
 

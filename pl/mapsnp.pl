@@ -24,11 +24,12 @@ sub mapFiles {
     my $file2 = $file1; $file2 =~ s/_1_/_2_/;
     my $fileu = $file1; $fileu =~ s/_1_/_u_/;
 
+    my $logfile = "$mapdir/$lib.mapsnp.log";
     my $sorted_bam = "$mapdir/$lib.sorted";
     # Treat reads as unpaired due to small references
     system(qq(
-        bowtie2 -5 5 -3 5 -p 1 -x $bowtie2_index_name -U $file1,$file2,$fileu |
-        samtools view -bS - | samtools sort - $sorted_bam
+        bowtie2 -5 5 -3 5 -p 1 -x $bowtie2_index_name -U $file1,$file2,$fileu 2> $logfile |
+        samtools view -bS - 2> $logfile | samtools sort - $sorted_bam 2> $logfile
     ));
     return("$sorted_bam.bam");
 }

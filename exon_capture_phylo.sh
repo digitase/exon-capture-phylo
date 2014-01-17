@@ -38,7 +38,7 @@
 
 # Include the config file, which is in valid bash format
 # source "test.config"
-echo Started exon_capture_phylo at $(date)
+echo ===== Started exon_capture_phylo at $(date) =====
 CONFIG_FILE="$1"
 source "$CONFIG_FILE"
 echo Using config file at "$CONFIG_FILE"
@@ -53,6 +53,12 @@ cd "$OUT_DIR" || exit
 # prepare data
 "$SCRIPT_DIR/sh/prepare_data.sh" "$SCRIPT_DIR/$CONFIG_FILE"
 
+# Check if we are using a job array
+# if [ -n $SGE_TASK_ID ]; then
+# libs=( $(cat $LIBRARIES_LIST) )
+# filnum=$[SGE_TASK_ID-1]
+# parfil=${libs[$filnum]}
+
 # assemble contigs
 < "$LIBRARIES_LIST" xargs -n 1 --max-procs 20 -I {} "$SCRIPT_DIR/sh/assemble_exons.sh" {} "$SCRIPT_DIR/$CONFIG_FILE"
 
@@ -62,5 +68,5 @@ cd "$OUT_DIR" || exit
 # gather contigs by exon and by sample
 "$SCRIPT_DIR/sh/gather_exons.sh" "$SCRIPT_DIR/$CONFIG_FILE"
 
-echo Finished at $(date)
+echo ===== Finished at $(date) =====
 exit

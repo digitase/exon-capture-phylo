@@ -24,18 +24,19 @@ sub prepareBAMandRef {
     # Sample names are of this format SP04_indexing12
     my ($lane, $samp) = split(/_/, $lib);
     my $ibamrg = "$gatkSNPcalls_dir/$lib.ReadGrouped.bam";
+    my $logfile = "$gatkSNPcalls_dir/$lib.picard.log";
 
     # Add read groups to BAM
     # Set max heap size 8G
     my $AddOrRepl = "java -Xmx8g -jar $picard_dir/AddOrReplaceReadGroups.jar";
-    system("$AddOrRepl INPUT=$bam OUTPUT=$ibamrg RGID=$lib RGLB=$lib RGPU=$lane RGPL=illumina RGSM=$samp");   
+    system("$AddOrRepl INPUT=$bam OUTPUT=$ibamrg RGID=$lib RGLB=$lib RGPU=$lane RGPL=illumina RGSM=$samp 2> $logfile");   
 
     # Index BAM file
     system("samtools index $ibamrg");
 
     # Creating the fasta sequence dictionary file
     (my $dict = $ref) =~ s/\.fasta$/\.dict/;
-    unless (-e $dict) { system("java -Xmx8g -jar $picard_dir/CreateSequenceDictionary.jar R=$ref O=$dict"); }
+    unless (-e $dict) { system("java -Xmx8g -jar $picard_dir/CreateSequenceDictionary.jar R=$ref O=$dict 2> $logfile"); }
 
     # Index reference FASTA
     system("samtools faidx $ref");
@@ -53,20 +54,22 @@ sub callGATK {
     my $ibamrg_basepath  = $ibamrg;
     $ibamrg_basepath =~ s/\.bam$//;
 
+    my $logfile = "$gatkSNPcalls_dir/$lib.gatk.log";
+
     my $vcf = "$ibamrg_basepath.vcf";
-    system("$gatk -R $ref -T HaplotypeCaller  -I $ibamrg -o $vcf");
+    system("$gatk -R $ref -T HaplotypeCaller  -I $ibamrg -o $vcf >> $logfile");
 
     my $phased_vcf = "$ibamrg_basepath.ReadBackedPhased.vcf";
-    system("$gatk -R $ref -T ReadBackedPhasing -I $ibamrg --variant $vcf --min_base_quality_score 21 -o $phased_vcf");
+    system("$gatk -R $ref -T ReadBackedPhasing -I $ibamrg --variant $vcf --min_base_quality_score 21 -o $phased_vcf >> $logfile");
 
     my $annotated_vcf = "$ibamrg_basepath.ReadBackedPhased.VariantAnnotated.vcf";
-    system("$gatk -R $ref -T VariantAnnotator  -I $ibamrg -A DepthPerAlleleBySample -A HaplotypeScore --variant $phased_vcf -o $annotated_vcf");
+    system("$gatk -R $ref -T VariantAnnotator  -I $ibamrg -A DepthPerAlleleBySample -A HaplotypeScore --variant $phased_vcf -o $annotated_vcf >> $logfile");
 
     my $filtered_vcf = "$ibamrg_basepath.ReadBackedPhased.VariantAnnotated.VariantFiltered.vcf";
-    system("$gatk -R $ref -T VariantFiltration  -o $filtered_vcf --variant $annotated_vcf --filterName depth --filterExpression \"DP \< 16\"");
+    system("$gatk -R $ref -T VariantFiltration  -o $filtered_vcf --variant $annotated_vcf --filterName depth --filterExpression \"DP \< 16\" >> $logfile");
 
     # DepthOfCoverage
-    system("$gatk -R $ref -T DepthOfCoverage -I $ibamrg -o $ibamrg_basepath.DepthOfCoverageTable"); 
+    system("$gatk -R $ref -T DepthOfCoverage -I $ibamrg -o $ibamrg_basepath.DepthOfCoverageTable >> $logfile"); 
 
     return($filtered_vcf);
 }

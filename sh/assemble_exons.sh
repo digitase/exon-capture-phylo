@@ -19,34 +19,34 @@
 sample_name="$1"
 CONFIG_FILE="$2"
 source "$CONFIG_FILE"
-echo Started assemble_exons.sh with "$sample_name" at $(date)
+echo ===== Started assemble_exons.sh with "$sample_name" at $(date) =====
 
 # 1. assembleByProt
-echo assembleByProt at $(date)
+echo assembleByProt "$sample_name" at $(date)
 perl "$SCRIPT_DIR/pl/assembleByProtv2.pl" "$sample_name" "$LIBRARIES_DIR" "$OUT_DIR" \
                                           "$ALL_PROTEIN_SEQS" "$TARGET_PROTEIN_BLAST_DB_NAME" "$TARGET_PROTEIN_SEQS_LIST"
 
 # 2. callVelvetAssemblies
-echo callVelvetAssemblies at $(date)
+echo callVelvetAssemblies "$sample_name" at $(date)
 printf "%s\n" "${VELVET_K_VALUES[@]}" | xargs -n 1 -I {} perl "$SCRIPT_DIR/pl/callVelvetAssemblies.pl" \
                                                                   "$sample_name" "$OUT_DIR" "$TARGET_PROTEIN_SEQS_LIST" {} 
 
 # 3. catcontigs
-echo catContigs at $(date)
+echo catContigs "$sample_name" at $(date)
 export PATH=$PATH:"$CAP3_DIR"
 perl "$SCRIPT_DIR/pl/catcontigs.pl" "$sample_name" "$OUT_DIR" \
                                     "$TARGET_PROTEIN_SEQS_LIST" \
                                     ${VELVET_K_VALUES[@]}
 
 # 4. callBestContig
-echo bestcontig_distrib at $(date)
+echo bestcontig_distrib "$sample_name" at $(date)
 perl "$SCRIPT_DIR/pl/bestcontig_distrib.pl" "$sample_name" "$OUT_DIR" \
                                             "$ALL_EXON_SEQS" "$TARGET_EXON_SEQS_LIST" \
                                             "$ALL_PROTEIN_BLAST_DB_NAME" \
                                             "$MIN_OVERLAP"
 
 # 5. gather best contigs from each exon
-echo best2ref at $(date)
+echo best2ref "$sample_name" at $(date)
 perl "$SCRIPT_DIR/pl/best2refs.pl" "$sample_name" "$OUT_DIR" "$TARGET_EXON_SEQS_LIST"
 
 exit

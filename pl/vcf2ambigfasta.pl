@@ -72,11 +72,10 @@ while (my $ref = $ref_IN->next_seq) {
     }
 
     $ref->seq("$ref_seq");
+    my $seqlen = $ref->length();
+    $ref_OUT->width($seqlen);
     $ref_OUT->write_seq($ref);
 
-    # print REFS_OUT ">$ref_name\n$ref_seq\n";
-
-    my $seqlen = length($ref_seq);
     print STATS_OUT "$ref_name\tHET:$hets\tALT_HOMO:$alts\tINDEL:$indel\tSEQ_LEN:$seqlen\n";
 }
 

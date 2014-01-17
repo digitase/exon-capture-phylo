@@ -14,7 +14,7 @@ source $CONFIG_FILE
 
 cd "$OUT_DIR"
 
-echo Started gather_exons.sh with at $(date)
+echo ===== Started gather_exons.sh with at $(date) =====
 
 # 5.1 gatherContigs
 echo gathercontigs at $(date)

@@ -10,12 +10,14 @@ unless(-d $blast_dbs_dir or mkdir $blast_dbs_dir) {
     die "Could not create blast database output directory $blast_dbs_dir\n";
 }
 
+my $logfile = "$assemdir/blast_dbs/prepareData.log";
+
 # Copy in all prots file, using the first field as the ID
 system("awk '{print \$1}' $all_prot_seqs > $blast_dbs_dir/all_proteins.fasta");
 
 # Create the all proteins blast db
 unless(-e "$blast_dbs_dir/$all_blast_db_name.pin") {
-    system("makeblastdb -dbtype prot -in $blast_dbs_dir/all_proteins.fasta -out $blast_dbs_dir/$all_blast_db_name");
+    system("makeblastdb -dbtype prot -in $blast_dbs_dir/all_proteins.fasta -out $blast_dbs_dir/$all_blast_db_name > $logfile");
 }
 
 # Extract sequences in target list from proteins file
@@ -24,6 +26,6 @@ system("perl -ne 'if (/^>(\\S+)/) {\$c=\$i{\$1}}\$c?print:chomp;\$i{\$_}=1 if \@
 
 # Create the target BLAST database unless it already exists
 unless(-e "$blast_dbs_dir/$targets_blast_db_name.pin") {
-    system("makeblastdb -dbtype prot -in $target_seqs -out $blast_dbs_dir/$targets_blast_db_name");
+    system("makeblastdb -dbtype prot -in $target_seqs -out $blast_dbs_dir/$targets_blast_db_name > $logfile");
 }
 
