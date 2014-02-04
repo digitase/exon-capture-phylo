@@ -6,7 +6,6 @@
 #$ -N job_exon_capture_phylo
 #$ -R y
 #$ -l virtual_free=10G,h_vmem=12G
-#$ -q bigmem.q
 #$ -tc 20 
 #$ -t 1-2
 
@@ -58,10 +57,10 @@ if [ -z "$SGE_TASK_ID" ] || [ "$SGE_TASK_ID" == "undefined" ]; then
     "$SCRIPT_DIR/sh/prepare_data.sh" "$SCRIPT_DIR/$CONFIG_FILE"
 
     # assemble contigs
-    < "$LIBRARIES_LIST" xargs -n 1 --max-procs "$MAX_PARALLEL_SAMPLES" -I {} "$SCRIPT_DIR/sh/assemble_exons.sh" "{}" "$SCRIPT_DIR/$CONFIG_FILE"
+    < "$SAMPLES_LIST" xargs -n 1 --max-procs "$MAX_PARALLEL_SAMPLES" -I {} "$SCRIPT_DIR/sh/assemble_exons.sh" "{}" "$SCRIPT_DIR/$CONFIG_FILE"
 
     # call variants
-    < "$LIBRARIES_LIST" xargs -n 1 --max-procs "$MAX_PARALLEL_SAMPLES" -I {} "$SCRIPT_DIR/sh/call_variants.sh" "{}" "$SCRIPT_DIR/$CONFIG_FILE"
+    < "$SAMPLES_LIST" xargs -n 1 --max-procs "$MAX_PARALLEL_SAMPLES" -I {} "$SCRIPT_DIR/sh/call_variants.sh" "{}" "$SCRIPT_DIR/$CONFIG_FILE"
 
     # gather contigs by exon and by sample
     "$SCRIPT_DIR/sh/gather_exons.sh" "$SCRIPT_DIR/$CONFIG_FILE"
@@ -69,33 +68,29 @@ if [ -z "$SGE_TASK_ID" ] || [ "$SGE_TASK_ID" == "undefined" ]; then
 # We are using a job array
 else
 
-    readarray -t SAMPLE_NAMES_ARRAY < "$LIBRARIES_LIST"
+    readarray -t SAMPLE_NAMES_ARRAY < "$SAMPLES_LIST"
     sample_num=${#SAMPLE_NAMES_ARRAY[@]}
     sample_name=${SAMPLE_NAMES_ARRAY[$SGE_TASK_ID - 1]}
     echo SGE Job Array SGE_TASK_ID=$SGE_TASK_ID detected. Using sample $sample_name out of $sample_num samples
 
     # data is already prepared continue
     if [ -d "$OUT_DIR/prepare_data_complete.lock" ]; then
-        echo already prepped!
-        :
+        echo Detected prepared data.
     # else check if the data is being prepared. If not, prepare the data, then inform that the data is prepared
-    elif mkdir "$OUT_DIR/preparing_data.lock"; then
-        echo I will prep
+    elif mkdir -m 400 "$OUT_DIR/preparing_data.lock" 2>/dev/null; then
+        echo Detected that data is unprepared.
         "$SCRIPT_DIR/sh/prepare_data.sh" "$SCRIPT_DIR/$CONFIG_FILE"
         mv "$OUT_DIR/preparing_data.lock/" "$OUT_DIR/prepare_data_complete.lock/"
 
     # else poll until prepare_data is complete
     else
         
-        echo I will wait
         while ! [ -d "$OUT_DIR/prepare_data_complete.lock/" ]; do
             sleep 10
-            echo waiting for prepare data complete
+            echo Waiting for prepare data completion.
         done
 
     fi
-    
-    echo main part now
 
     # assemble contigs
     "$SCRIPT_DIR/sh/assemble_exons.sh" "$sample_name" "$SCRIPT_DIR/$CONFIG_FILE"
@@ -104,28 +99,30 @@ else
     "$SCRIPT_DIR/sh/call_variants.sh" "$sample_name" "$SCRIPT_DIR/$CONFIG_FILE"
 
     # inform that the sample is done
-    echo I finished main part
     echo "$SGE_TASK_ID" >> "$OUT_DIR/completed_ids.txt"
 
     # if all samples are done, this job needs to gather
-    if [ "$(wc -l < "$OUT_DIR/completed_ids.txt")" -eq "$sample_num" ]; then
+    num_samples_complete="$(wc -l < "$OUT_DIR/completed_ids.txt")"
+    if [ "$num_samples_complete" -eq "$sample_num" ]; then
 
         # lock it to make sure this is the only job gathering
-        if mkdir "$OUT_DIR/gather_data.lock"; then
-            echo I gather!
+        if mkdir -m 400 "$OUT_DIR/gather_data.lock" 2>/dev/null; then
+            echo Final sample complete. Gathering output.
             # gather data 
             "$SCRIPT_DIR/sh/gather_exons.sh" "$SCRIPT_DIR/$CONFIG_FILE"
             
             # clean up
+            echo Cleaning up and exiting.
             rmdir "$OUT_DIR/prepare_data_complete.lock/"
             rm "$OUT_DIR/completed_ids.txt"
             rmdir "$OUT_DIR/gather_data.lock"
         else
-            echo race condition avoided. heehee
+            # Race condition avoided
+            :
         fi
 
     else
-        echo I am not the last job. cya, not gathering
+        echo Sample "$sample_name" complete. "$num_samples_complete" of "$sample_num" samples completed. Exiting.
     fi
 
 fi

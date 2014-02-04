@@ -23,8 +23,9 @@ echo ===== Started assemble_exons.sh with "$sample_name" at $(date) =====
 
 # 1. assembleByProt
 echo assembleByProt "$sample_name" at $(date)
-perl "$SCRIPT_DIR/pl/assembleByProtv2.pl" "$sample_name" "$LIBRARIES_DIR" "$OUT_DIR" \
-                                          "$ALL_PROTEIN_SEQS" "$TARGET_PROTEIN_BLAST_DB_NAME" "$TARGET_PROTEIN_SEQS_LIST"
+perl "$SCRIPT_DIR/pl/assembleByProtv2.pl" "$sample_name" "$SAMPLES_DIR" "$OUT_DIR" \
+                                          "$TARGET_PROTEIN_BLAST_DB_NAME" "$TARGET_PROTEIN_SEQS_LIST" \
+                                          "$BLAST_PROCS_PER_SAMPLE"
 
 # 2. callVelvetAssemblies
 echo callVelvetAssemblies "$sample_name" at $(date)
