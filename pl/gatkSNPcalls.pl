@@ -6,7 +6,7 @@ use strict;
 # my $mapdir   = "/home2/jgb/assemble/crypto/map/";
 # my $lib = $ARGV[0];
 
-my ($lib, $readdir, $assemdir, $picard_dir, $gatk_dir) = @ARGV;
+my ($lib, $readdir, $assemdir, $picard_dir, $gatk_dir, $java_heap_size) = @ARGV;
 
 my $gatkSNPcalls_dir = "$assemdir/$lib/${lib}_gatkSNPcalls/";
 unless(-e $gatkSNPcalls_dir or mkdir $gatkSNPcalls_dir) { die "Unable to create $gatkSNPcalls_dir\n"; }
@@ -27,8 +27,8 @@ sub prepareBAMandRef {
     my $logfile = "$gatkSNPcalls_dir/$lib.picard.log";
 
     # Add read groups to BAM
-    # Set max heap size 8G
-    my $AddOrRepl = "java -Xmx8g -jar $picard_dir/AddOrReplaceReadGroups.jar";
+    # Set max heap size
+    my $AddOrRepl = "java -Xmx${java_heap_size}g -jar $picard_dir/AddOrReplaceReadGroups.jar";
     system("$AddOrRepl INPUT=$bam OUTPUT=$ibamrg RGID=$lib RGLB=$lib RGPU=$lane RGPL=illumina RGSM=$samp 2> $logfile");   
 
     # Index BAM file
@@ -36,7 +36,7 @@ sub prepareBAMandRef {
 
     # Creating the fasta sequence dictionary file
     (my $dict = $ref) =~ s/\.fasta$/\.dict/;
-    unless (-e $dict) { system("java -Xmx8g -jar $picard_dir/CreateSequenceDictionary.jar R=$ref O=$dict 2> $logfile"); }
+    unless (-e $dict) { system("java -Xmx${java_heap_size}g -jar $picard_dir/CreateSequenceDictionary.jar R=$ref O=$dict 2> $logfile"); }
 
     # Index reference FASTA
     system("samtools faidx $ref");
@@ -44,11 +44,10 @@ sub prepareBAMandRef {
     return($ibamrg);
 }
 
-# TODO Redirect err output from picard and stdout from gatk to log files
 sub callGATK {
     my ($ibamrg, $ref, $gatk_dir, $gatkSNPcalls_dir, $lib) = @_;
 
-    my $gatk  = "java -Xmx8g -jar $gatk_dir/GenomeAnalysisTK.jar";
+    my $gatk  = "java -Xmx${java_heap_size}g -jar $gatk_dir/GenomeAnalysisTK.jar";
 
     # Variant calls
     my $ibamrg_basepath  = $ibamrg;

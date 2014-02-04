@@ -20,7 +20,7 @@ echo mapsnp "$sample_name" at $(date)
 perl "$SCRIPT_DIR/pl/mapsnp.pl" "$sample_name" "$SAMPLES_DIR" "$OUT_DIR"
 
 echo gatkSNPcalls "$sample_name" at $(date)
-perl "$SCRIPT_DIR/pl/gatkSNPcalls.pl" "$sample_name" "$SAMPLES_DIR" "$OUT_DIR" "$PICARD_DIR" "$GATK_DIR"
+perl "$SCRIPT_DIR/pl/gatkSNPcalls.pl" "$sample_name" "$SAMPLES_DIR" "$OUT_DIR" "$PICARD_DIR" "$GATK_DIR" "$JAVA_MAX_HEAP_SIZE"
 
 echo vcf2ambigfasta "$sample_name" at $(date)
 perl "$SCRIPT_DIR/pl/vcf2ambigfasta.pl" "$sample_name" "$OUT_DIR"
