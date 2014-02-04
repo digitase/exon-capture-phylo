@@ -1,25 +1,17 @@
-# blastx reads against targets
-# reads with significant hits to each exon per file
-# BLAT (BLAST-like Alignment Tool) is a sequence alignment tool similar to BLAST but structured differently. BLAT quickly finds similarity in DNA and protein but it needs an exact or nearly-exact match to find a hit. Therefore Blat is not as flexible as BLAST. Since BLAST can find much more remote matches than Blat, it is the recommended tool when searching more distantly related sequences.
-
 use strict;
 use warnings;
 
 # Sample name, samples directory, output directory, FASTA with all the targets to make the blast db, BLAST database name
-my ($lib, $readdir, $assemdir, $all_prot_seqs, $adb, $target_seqs_list) = @ARGV;
+my ($lib, $readdir, $assemdir, $adb, $target_seqs_list, $np) = @ARGV;
 
 # Expectation value for blastx
 my $eval = "1e-9";
-# Number of parallel blast processes to use
-my $np = "8";
-# Use blastall blastx instead of blast+ blastx?
-my $use_legacy_blast = 1;
 
 my $blast_dbs_dir = $assemdir . "/blast_dbs/";
-filtAssemb($readdir, $assemdir, $blast_dbs_dir, $lib, $adb, $eval, $np, $use_legacy_blast);
+filtAssemb($readdir, $assemdir, $blast_dbs_dir, $lib, $adb, $eval, $np);
 
 sub filtAssemb {
-    my ($readdir, $assemdir, $blast_dbs_dir, $lib, $adb, $eval, $np, $use_legacy_blast) = @_;
+    my ($readdir, $assemdir, $blast_dbs_dir, $lib, $adb, $eval, $np) = @_;
 
     # Create directory for sample
     my $assemlib = $assemdir . $lib . "/";
@@ -42,9 +34,9 @@ sub filtAssemb {
     my $fasta_u = "$assemlib/$lib" . "_u_final.fasta";
 
     # do the blasting
-    unless(-e "$blast_1") { blastProts($fil_1, $blast_1, $fasta_1, $blast_dbs_dir, $adb, $eval, $np, $use_legacy_blast); }
-    unless(-e "$blast_2") { blastProts($fil_2, $blast_2, $fasta_2, $blast_dbs_dir, $adb, $eval, $np, $use_legacy_blast); }
-    unless(-e "$blast_u") { blastProts($fil_u, $blast_u, $fasta_u, $blast_dbs_dir, $adb, $eval, $np, $use_legacy_blast); }
+    unless(-e "$blast_1") { blastProts($fil_1, $blast_1, $fasta_1, $blast_dbs_dir, $adb, $eval, $np); }
+    unless(-e "$blast_2") { blastProts($fil_2, $blast_2, $fasta_2, $blast_dbs_dir, $adb, $eval, $np); }
+    unless(-e "$blast_u") { blastProts($fil_u, $blast_u, $fasta_u, $blast_dbs_dir, $adb, $eval, $np); }
 
     # for each exon that was hit by reads from a file, collate those reads
     my $call_1  = getbest($assemlib, $fasta_1, $blast_1, "1" , $target_seqs_list);
@@ -56,25 +48,19 @@ sub filtAssemb {
     my $call_2p = getbest($assemlib, $fasta_1, $blast_2, "2p", $target_seqs_list);
 }
 
-sub blastProts {
-    my ($fil, $blast, $fasta, $blast_dbs_dir, $adb, $eval, $np, $use_legacy_blast) = @_;
-    
-    my $blast_call;
-    my $start_time = localtime();
 
-    if($use_legacy_blast) {
-        print "Blasting $fil against $adb with legacy BLAST at $start_time\n";
-        $blast_call = "blastall -p blastx -d $blast_dbs_dir/$adb -e $eval -m 8 -I T"
-    } else {
-        print "Blasting $fil against $adb with BLAST+ at $start_time\n";
-        $blast_call = "blastx -db $blast_dbs_dir/$adb -evalue $eval -outfmt 6 -show_gis"
-    }
+sub blastProts {
+    my ($fil, $blast, $fasta, $blast_dbs_dir, $adb, $eval, $np) = @_;
+    
+    my $blast_call = "blastall -p blastx -d $blast_dbs_dir/$adb -e $eval -m 8 -I T";
+    my $start_time = localtime();
+    print "Blasting $fil against $adb with legacy BLAST at $start_time\n";
 
     system(qq(
         zcat $fil | 
         awk '{if(NR % 4 == 1 || NR % 4 == 2) {sub(/@/, ">"); print; } }' | 
         tee $fasta |
-        parallel -j $np --block 1M --recstart '>' --pipe $blast_call > $blast
+        parallel -j $np --block 200K --recstart '>' --pipe $blast_call > $blast
     ));
 }
 
@@ -136,4 +122,61 @@ sub getbest {
 
 __END__
 
+=head1 NAME
 
+assembleByProt
+
+=head1 SYNOPSIS
+
+BLASTx sample reads against target proteins and gather reads aligned to each target
+
+=head1 USAGE
+
+$lib, $readdir, $assemdir, $adb, $target_seqs_list, $np
+Sample name, samples directory, output directory, BLAST database name, target protein IDs list, num of parallel blast processes
+
+=head1 DESCRIPTION OF ARGUMENTS
+
+to be continued...
+
+=head1 SUBROUTINES
+
+Use CPAN style http://juerd.nl/site.plp/perlpodtut
+
+=head1 DIAGNOSTICS
+
+List of errors...
+
+=head1 DEPENDENCIES
+
+NCBI blastall
+GNU parallel
+
+=head1 BUGS AND LIMITATIONS
+
+NCBI blastall is being phased out...
+
+=head1 AUTHORS
+
+Dr. Jason Bragg, ANU
+Ben Bai, ANU
+
+=head1 AUTHORS' COMMENTS
+
+=head2 Why not BLAT?
+
+BLAT (BLAST-like Alignment Tool) is a sequence alignment tool similar to BLAST but structured differently. BLAT quickly finds similarity in DNA and protein but it needs an exact or nearly-exact match to find a hit. Therefore Blat is not as flexible as BLAST. Since BLAST can find much more remote matches than Blat, it is the recommended tool when searching more distantly related sequences.
+
+=head2 Why not BLAST+?
+
+Speed...
+
+=head2 Why the stringent expectation value?
+
+Blah...
+
+=head1 LICENCE AND COPYRIGHT
+
+GNU Public
+
+=cut
