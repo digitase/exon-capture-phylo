@@ -1,7 +1,7 @@
 use warnings;
 use strict;
 
-my ($lib, $assemdir, $target_seqs_list, $k) = @ARGV;
+my ($lib, $assemdir, $target_seqs_list, $velveth_path, $velvetg_path, $k) = @ARGV;
 
 my $time = localtime();
 print "callVelvetAssemblies on $lib with k = $k at $time\n";
@@ -24,8 +24,8 @@ foreach my $protname (@protnames) {
     system("cat $assemlib/$protname/${protname}_assemble_by_prot/* > $allhitreads");
 
     # Paramters optimised for small assemblies
-    system("velveth $kvalue_dir $k -short -fasta $allhitreads > $kvalue_dir/${protname}_velveth.log");
-    system("velvetg $kvalue_dir -very_clean yes -max_branch_length 320 -max_gap_count 6 -cov_cutoff 5 > $kvalue_dir/${protname}_velvetg.log");
+    system("$velveth_path $kvalue_dir $k -short -fasta $allhitreads > $kvalue_dir/${protname}_velveth.log");
+    system("$velvetg_path $kvalue_dir -very_clean yes -max_branch_length 320 -max_gap_count 6 -cov_cutoff 5 > $kvalue_dir/${protname}_velvetg.log");
 
     my $all_assembled_contigs = "$veldir/${protname}_velvet_contigs.fasta";
     system("cat $kvalue_dir/contigs.fa >> $all_assembled_contigs");

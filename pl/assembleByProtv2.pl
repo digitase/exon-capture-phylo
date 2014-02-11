@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 # Sample name, samples directory, output directory, FASTA with all the targets to make the blast db, BLAST database name
-my ($lib, $readdir, $assemdir, $adb, $target_seqs_list, $np) = @ARGV;
+my ($lib, $readdir, $assemdir, $adb, $target_seqs_list, $np, $blastall_path) = @ARGV;
 
 # Expectation value for blastx
 my $eval = "1e-9";
@@ -52,7 +52,7 @@ sub filtAssemb {
 sub blastProts {
     my ($fil, $blast, $fasta, $blast_dbs_dir, $adb, $eval, $np) = @_;
     
-    my $blast_call = "blastall -p blastx -d $blast_dbs_dir/$adb -e $eval -m 8 -I T";
+    my $blast_call = "$blastall_path -p blastx -d $blast_dbs_dir/$adb -e $eval -m 8 -I T";
     my $start_time = localtime();
     print "Blasting $fil against $adb with legacy BLAST at $start_time\n";
 

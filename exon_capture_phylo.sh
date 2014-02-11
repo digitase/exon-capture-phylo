@@ -5,7 +5,7 @@
 #$ -r y
 #$ -N job_exon_capture_phylo
 #$ -R y
-#$ -l virtual_free=10G,h_vmem=12G
+#$ -l virtual_free=8G,h_vmem=12G
 #$ -tc 20 
 #$ -t 1-2
 
@@ -71,7 +71,8 @@ else
     readarray -t SAMPLE_NAMES_ARRAY < "$SAMPLES_LIST"
     sample_num=${#SAMPLE_NAMES_ARRAY[@]}
     sample_name=${SAMPLE_NAMES_ARRAY[$SGE_TASK_ID - 1]}
-    echo SGE Job Array SGE_TASK_ID=$SGE_TASK_ID detected. Using sample $sample_name out of $sample_num samples
+    host_name="$(hostname)"
+    echo SGE Job Array SGE_TASK_ID="$SGE_TASK_ID" detected. Processing sample "$sample_name" out of "$sample_num" samples on "$host_name"
 
     # data is already prepared continue
     if [ -d "$OUT_DIR/prepare_data_complete.lock" ]; then
@@ -107,7 +108,7 @@ else
 
         # lock it to make sure this is the only job gathering
         if mkdir -m 400 "$OUT_DIR/gather_data.lock" 2>/dev/null; then
-            echo Final sample complete. Gathering output.
+            echo Final sample complete. Gathering output on "$host_name"
             # gather data 
             "$SCRIPT_DIR/sh/gather_exons.sh" "$SCRIPT_DIR/$CONFIG_FILE"
             
@@ -122,7 +123,7 @@ else
         fi
 
     else
-        echo Sample "$sample_name" complete. "$num_samples_complete" of "$sample_num" samples completed. Exiting.
+        echo Sample "$sample_name" complete on "$host_name". "$num_samples_complete" of "$sample_num" samples completed. Exiting.
     fi
 
 fi

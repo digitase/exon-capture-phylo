@@ -6,7 +6,7 @@ use strict;
 # my $mapdir   = "/home2/jgb/assemble/crypto/map/";
 # my $lib = $ARGV[0];
 
-my ($lib, $readdir, $assemdir, $picard_dir, $gatk_dir, $java_heap_size) = @ARGV;
+my ($lib, $readdir, $assemdir, $picard_dir, $gatk_dir, $java_heap_size, $samtools_path) = @ARGV;
 
 my $gatkSNPcalls_dir = "$assemdir/$lib/${lib}_gatkSNPcalls/";
 unless(-e $gatkSNPcalls_dir or mkdir $gatkSNPcalls_dir) { die "Unable to create $gatkSNPcalls_dir\n"; }
@@ -32,14 +32,14 @@ sub prepareBAMandRef {
     system("$AddOrRepl INPUT=$bam OUTPUT=$ibamrg RGID=$lib RGLB=$lib RGPU=$lane RGPL=illumina RGSM=$samp 2> $logfile");   
 
     # Index BAM file
-    system("samtools index $ibamrg");
+    system("$samtools_path index $ibamrg");
 
     # Creating the fasta sequence dictionary file
     (my $dict = $ref) =~ s/\.fasta$/\.dict/;
     unless (-e $dict) { system("java -Xmx${java_heap_size}g -jar $picard_dir/CreateSequenceDictionary.jar R=$ref O=$dict 2> $logfile"); }
 
     # Index reference FASTA
-    system("samtools faidx $ref");
+    system("$samtools_path faidx $ref");
 
     return($ibamrg);
 }

@@ -3,7 +3,7 @@ use strict;
 
 use List::Util qw(max min);
 
-my ($lib, $assemdir, $all_exons_file, $exonlist, $blastdb, $minoverlap) = @ARGV;
+my ($lib, $assemdir, $all_exons_file, $exonlist, $blastdb, $minoverlap, $exonerate_path, $blastall_path) = @ARGV;
 
 # Create the target BLAST database unless it already exists
 my $assemlib = "$assemdir/$lib/";
@@ -57,7 +57,7 @@ sub getTargetRegionInProtein {
     my ($exonerate_query, $exonerate_target, $exonerate_out) = @_;
 
     my $ryo = '">%ti b%qab e%qae p%pi\\n%tas\\n"';
-    system("exonerate --model protein2genome --query $exonerate_query --target $exonerate_target --showvulgar no --showalignment no --ryo $ryo > $exonerate_out");
+    system("$exonerate_path --model protein2genome --query $exonerate_query --target $exonerate_target --showvulgar no --showalignment no --ryo $ryo > $exonerate_out");
     
     # Remove exonerate lines
     open EFE, "<$exonerate_out" or die "Could not open exonerate output file $exonerate_out\n";
@@ -127,7 +127,7 @@ sub getBestContig {
 
     my $blastout = "$filtered_contigs_basename.against_all.blast";
     my $bestout = "$filtered_contigs_basename.best_contig.fasta";
-    system("blastall -i $filtered_contigs_file -p blastx -d $blast_dbs_dir/$blastdb -o $blastout -m 8 -e 1E-10");
+    system("$blastall_path -i $filtered_contigs_file -p blastx -d $blast_dbs_dir/$blastdb -o $blastout -m 8 -e 1E-10");
     
     open BLAST, "<$blastout" or die "Could not open blastx output file $blastout\n";
     my @blastlines = <BLAST>;
