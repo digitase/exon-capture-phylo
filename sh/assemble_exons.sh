@@ -24,7 +24,7 @@ echo ===== Started assemble_exons.sh with "$sample_name" at $(date) =====
 # 1. assembleByProt
 echo assembleByProt "$sample_name" at $(date)
 perl "$SCRIPT_DIR/pl/assembleByProtv2.pl" "$sample_name" "$SAMPLES_DIR" "$OUT_DIR" \
-                                          "$TARGET_PROTEIN_BLAST_DB_NAME" "$TARGET_PROTEIN_SEQS_LIST" \
+                                          "$TARGET_PROTEIN_SEQS_LIST" \
                                           "$BLAST_PROCS_PER_SAMPLE" "$BLASTALL_PATH"
 
 # 2. callVelvetAssemblies
@@ -44,7 +44,6 @@ perl "$SCRIPT_DIR/pl/catcontigs.pl" "$sample_name" "$OUT_DIR" \
 echo bestcontig_distrib "$sample_name" at $(date)
 perl "$SCRIPT_DIR/pl/bestcontig_distrib.pl" "$sample_name" "$OUT_DIR" \
                                             "$ALL_EXON_SEQS" "$TARGET_EXON_SEQS_LIST" \
-                                            "$ALL_PROTEIN_BLAST_DB_NAME" \
                                             "$MIN_OVERLAP" "$EXONERATE_PATH" "$BLASTALL_PATH"
 
 # 5. gather best contigs from each exon

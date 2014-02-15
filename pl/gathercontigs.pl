@@ -106,7 +106,7 @@ my $p = 0;
 foreach my $exon (keys %contignum){
 
      if ($p==0) {
-        print CONNUMS "library"; 
+        print CONNUMS "sample:"; 
           foreach my $lib (keys %{$contignum{$exon}}){
              print CONNUMS "\t$lib";
           }

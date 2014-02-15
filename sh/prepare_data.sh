@@ -17,7 +17,7 @@ cd "$OUT_DIR"
 echo ===== Started prepare_data.sh with at $(date) =====
 
 echo prepareData at $(date)
-perl "$SCRIPT_DIR/pl/prepareData.pl" "$OUT_DIR" "$TARGET_PROTEIN_BLAST_DB_NAME" "$ALL_PROTEIN_BLAST_DB_NAME" \
+perl "$SCRIPT_DIR/pl/prepareData.pl" "$OUT_DIR" \
                                      "$ALL_PROTEIN_SEQS" "$TARGET_PROTEIN_SEQS_LIST" \
                                      "$MAKEBLASTDB_PATH"
 

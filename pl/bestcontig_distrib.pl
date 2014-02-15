@@ -3,7 +3,7 @@ use strict;
 
 use List::Util qw(max min);
 
-my ($lib, $assemdir, $all_exons_file, $exonlist, $blastdb, $minoverlap, $exonerate_path, $blastall_path) = @ARGV;
+my ($lib, $assemdir, $all_exons_file, $exonlist, $minoverlap, $exonerate_path, $blastall_path) = @ARGV;
 
 # Create the target BLAST database unless it already exists
 my $assemlib = "$assemdir/$lib/";
@@ -44,7 +44,7 @@ foreach my $exon (@exons) {
         filterExoneratedContigs($exonerated_contigs, $filtered_contigs, $region_start, $region_end, $exon_name, $minoverlap);
 
         # determine best contig for the exon by blastx
-        getBestContig($filtered_contigs, $prot, $blastdb, $blast_dbs_dir, $exon_name);
+        getBestContig($filtered_contigs, $prot, $blast_dbs_dir, $exon_name);
 
     } else {
         print "Exon naming format incorrect for: $exon\n";
@@ -120,14 +120,14 @@ sub filterExoneratedContigs {
 
 sub getBestContig {
     # Blast the contig against all anolis proteisn
-    my ($filtered_contigs_file, $prot, $blastdb, $blast_dbs_dir, $exon_name) = @_;
+    my ($filtered_contigs_file, $prot, $blast_dbs_dir, $exon_name) = @_;
 
     my $filtered_contigs_basename = $filtered_contigs_file;
     $filtered_contigs_basename =~ s/\.fasta//;
 
     my $blastout = "$filtered_contigs_basename.against_all.blast";
     my $bestout = "$filtered_contigs_basename.best_contig.fasta";
-    system("$blastall_path -i $filtered_contigs_file -p blastx -d $blast_dbs_dir/$blastdb -o $blastout -m 8 -e 1E-10");
+    system("$blastall_path -i $filtered_contigs_file -p blastx -d $blast_dbs_dir/all_proteins -o $blastout -m 8 -e 1E-10");
     
     open BLAST, "<$blastout" or die "Could not open blastx output file $blastout\n";
     my @blastlines = <BLAST>;

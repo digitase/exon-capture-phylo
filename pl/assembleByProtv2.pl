@@ -2,16 +2,16 @@ use strict;
 use warnings;
 
 # Sample name, samples directory, output directory, FASTA with all the targets to make the blast db, BLAST database name
-my ($lib, $readdir, $assemdir, $adb, $target_seqs_list, $np, $blastall_path) = @ARGV;
+my ($lib, $readdir, $assemdir, $target_seqs_list, $np, $blastall_path) = @ARGV;
 
 # Expectation value for blastx
 my $eval = "1e-9";
 
 my $blast_dbs_dir = $assemdir . "/blast_dbs/";
-filtAssemb($readdir, $assemdir, $blast_dbs_dir, $lib, $adb, $eval, $np);
+filtAssemb($readdir, $assemdir, $blast_dbs_dir, $lib, $eval, $np);
 
 sub filtAssemb {
-    my ($readdir, $assemdir, $blast_dbs_dir, $lib, $adb, $eval, $np) = @_;
+    my ($readdir, $assemdir, $blast_dbs_dir, $lib, $eval, $np) = @_;
 
     # Create directory for sample
     my $assemlib = $assemdir . $lib . "/";
@@ -34,9 +34,9 @@ sub filtAssemb {
     my $fasta_u = "$assemlib/$lib" . "_u_final.fasta";
 
     # do the blasting
-    unless(-e "$blast_1") { blastProts($fil_1, $blast_1, $fasta_1, $blast_dbs_dir, $adb, $eval, $np); }
-    unless(-e "$blast_2") { blastProts($fil_2, $blast_2, $fasta_2, $blast_dbs_dir, $adb, $eval, $np); }
-    unless(-e "$blast_u") { blastProts($fil_u, $blast_u, $fasta_u, $blast_dbs_dir, $adb, $eval, $np); }
+    unless(-e "$blast_1") { blastProts($fil_1, $blast_1, $fasta_1, $blast_dbs_dir, $eval, $np); }
+    unless(-e "$blast_2") { blastProts($fil_2, $blast_2, $fasta_2, $blast_dbs_dir, $eval, $np); }
+    unless(-e "$blast_u") { blastProts($fil_u, $blast_u, $fasta_u, $blast_dbs_dir, $eval, $np); }
 
     # for each exon that was hit by reads from a file, collate those reads
     my $call_1  = getbest($assemlib, $fasta_1, $blast_1, "1" , $target_seqs_list);
@@ -50,11 +50,11 @@ sub filtAssemb {
 
 
 sub blastProts {
-    my ($fil, $blast, $fasta, $blast_dbs_dir, $adb, $eval, $np) = @_;
+    my ($fil, $blast, $fasta, $blast_dbs_dir, $eval, $np) = @_;
     
-    my $blast_call = "$blastall_path -p blastx -d $blast_dbs_dir/$adb -e $eval -m 8 -I T";
+    my $blast_call = "$blastall_path -p blastx -d $blast_dbs_dir/target_proteins -e $eval -m 8 -I T";
     my $start_time = localtime();
-    print "Blasting $fil against $adb with legacy BLAST at $start_time\n";
+    print "Blasting $fil against target proteins with legacy BLAST at $start_time\n";
 
     system(qq(
         zcat $fil | 
@@ -64,7 +64,7 @@ sub blastProts {
     ));
 }
 
-#  
+# 
 sub getbest {
     my ($assemlib, $fasta, $blast, $f, $target_seqs_list) = @_;
 
@@ -132,8 +132,8 @@ BLASTx sample reads against target proteins and gather reads aligned to each tar
 
 =head1 USAGE
 
-$lib, $readdir, $assemdir, $adb, $target_seqs_list, $np
-Sample name, samples directory, output directory, BLAST database name, target protein IDs list, num of parallel blast processes
+$lib, $readdir, $assemdir, $target_seqs_list, $np
+Sample name, samples directory, output directory, database name, target protein IDs list, num of parallel blast processes
 
 =head1 DESCRIPTION OF ARGUMENTS
 
