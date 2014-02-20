@@ -26,6 +26,6 @@ system("perl -ne 'if (/^>(\\S+)/) {\$c=\$i{\$1}}\$c?print:chomp;\$i{\$_}=1 if \@
 
 # Create the target BLAST database unless it already exists
 unless(-e "$blast_dbs_dir/target_proteins.pin") {
-    system("$makeblastdb_path -dbtype prot -in $target_seqs -out $blast_dbs_dir/target_proteins > $logfile");
+    system("$makeblastdb_path -dbtype prot -in $target_seqs -out $blast_dbs_dir/target_proteins >> $logfile");
 }
 

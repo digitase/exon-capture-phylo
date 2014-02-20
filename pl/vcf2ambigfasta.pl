@@ -24,7 +24,7 @@ my $ref_OUT = Bio::SeqIO->new(-file => ">$output_reffil",
                               -format => "fasta",
                               -alphabet => "dna");
 
-my $output_statsfil = "$vcf2ambigfasta_dir/${lib}_best2refs.vcf2ambigfasta_stats.fasta";
+my $output_statsfil = "$vcf2ambigfasta_dir/${lib}_best2refs.vcf2ambigfasta_refs.stats";
 open(STATS_OUT, ">$output_statsfil") or die "Could not open output reference file $output_statsfil\n";
 
 # loop through reference sequences

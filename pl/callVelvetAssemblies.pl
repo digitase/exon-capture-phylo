@@ -30,5 +30,5 @@ foreach my $protname (@protnames) {
     my $all_assembled_contigs = "$veldir/${protname}_velvet_contigs.fasta";
     system("cat $kvalue_dir/contigs.fa >> $all_assembled_contigs");
 
-    # sleep(3); 
+    # sleep(2); 
 }
