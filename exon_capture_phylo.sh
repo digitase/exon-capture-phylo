@@ -6,7 +6,7 @@
 #$ -m bea
 #$ -N job_exon_capture_phylo
 #$ -R y
-#$ -l virtual_free=6G,h_vmem=8G
+#$ -l virtual_free=10G,h_vmem=12G
 #$ -tc 4
 #$ -t 1-2
 

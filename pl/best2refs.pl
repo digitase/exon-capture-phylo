@@ -23,12 +23,11 @@ my $gathercontigs_dir = "$assemdir/gathercontigs_by_target_exon/";
 my $reffil = "$best2refs_dir/${lib}_best2refs.fasta";
 open REFS, ">$reffil" or die "Could not open the output best2refs fasta file $reffil\n";
 
-foreach my $exon (@exons) {
+foreach my $exon_name (@exons) {
 
-    if ($exon =~ /(ENS\S+)_(exon\S+)/) { 
+    if ($exon_name =~ /^(\S+?)_exon\S+/) { 
 
         my $prot = $1; 
-        my $exon_name = $1 . "_" . $2;
 
         my $bestcontig_distrib_dir = "$assemdir/$lib/$prot/${prot}_bestcontig_distrib/";
         my $bestcontigfil = "$bestcontig_distrib_dir/${exon_name}_velvet_contigs.cap3ed.exonerated.filtered.best_contig.fasta";      
@@ -49,7 +48,7 @@ foreach my $exon (@exons) {
         }
 
     } else {
-        die "Invalid exon name $exon found in $exonlist\n";
+        die "Invalid exon name $exon_name found in $exonlist\n";
     }
     
 }

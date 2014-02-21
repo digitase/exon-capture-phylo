@@ -15,14 +15,11 @@ my @exons = <EXONS>;
 chomp(@exons);
 close(EXONS);
 
-foreach my $exon (@exons) {
+foreach my $exon_name (@exons) {
 
-    # exonlist entries are of the form ENSACAP00000021611_exon1_Sapro
-    # TODO change to alphanumberic regex
-    if ($exon =~ /(ENS\S+)_(exon\S+)/) { 
+    if ($exon_name =~ /^(\S+?)_exon\S+/) {
 
         my $prot = $1; 
-        my $exon_name = $1 . "_" . $2;   
 
         my $bestcontig_distrib_dir = "$assemlib/$prot/${prot}_bestcontig_distrib/";
         unless(-e $bestcontig_distrib_dir or mkdir $bestcontig_distrib_dir) { die "Could not make $bestcontig_distrib_dir\n"; }
@@ -30,7 +27,7 @@ foreach my $exon (@exons) {
         # Get exon sequence from all exons file
         my $exonerate_query = "$assemlib/$prot/${prot}_catcontigs/$prot.fasta";
         my $exonerate_target = "$bestcontig_distrib_dir/$exon_name.fasta";
-        system("perl -ne 'if(/^>(\\S+)/) { \$c = grep {/^\$1\$/} qw($exon) } print if \$c' $all_exons_file > $exonerate_target");
+        system("perl -ne 'if(/^>(\\S+)/) { \$c = grep {/^\$1\$/} qw($exon_name) } print if \$c' $all_exons_file > $exonerate_target");
 
         my $exonerate_out = "$bestcontig_distrib_dir/$exon_name.exonerated.fasta";
         # get overlap between target exon and anolis
@@ -47,7 +44,7 @@ foreach my $exon (@exons) {
         getBestContig($filtered_contigs, $prot, $blast_dbs_dir, $exon_name);
 
     } else {
-        print "Exon naming format incorrect for: $exon\n";
+        print "Exon naming format incorrect for: $exon_name\n";
     }
 
     # sleep(2);

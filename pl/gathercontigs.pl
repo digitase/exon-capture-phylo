@@ -29,25 +29,24 @@ close(LIBS); close(EXONS);
 my $ctgnums = "$gathercontigs_dir/countallcontigs.txt";
 
 my %contignum; 
-foreach my $exonfile (@exons) {
+foreach my $exon_name (@exons) {
 
-    if ($exonfile =~ /(ENS\S+)_(exon\S+)/) { 
+    if ($exon_name =~ /^(\S+?)_exon\S+/) {
 
         my $prot = $1; 
-        my $exon = $1 . "_" . $2;   
 
-        my $exonallcontigs = $alldir . $exon . "_all_contigs.fasta";
+        my $exonallcontigs = $alldir . $exon_name . "_all_contigs.fasta";
         open ALLCON, ">$exonallcontigs" or die "cannot open a contig file";
 
-        my $exonbestcontigs = $bestdir . $exon . "_best_contigs.fasta";
+        my $exonbestcontigs = $bestdir . $exon_name . "_best_contigs.fasta";
         open BESTCON, ">$exonbestcontigs" or die "cannot open a contig file";
 
         foreach my $lib (@libs) {
             my $assemlib = "$assemdir/$lib/";
             my $bestcontig_distrib_dir = "$assemlib/$prot/${prot}_bestcontig_distrib/";
 
-            my $contigfilall = "$bestcontig_distrib_dir/${exon}_velvet_contigs.cap3ed.exonerated.filtered.fasta";      
-            my $contigfilbest = "$bestcontig_distrib_dir/${exon}_velvet_contigs.cap3ed.exonerated.filtered.best_contig.fasta";      
+            my $contigfilall = "$bestcontig_distrib_dir/${exon_name}_velvet_contigs.cap3ed.exonerated.filtered.fasta";      
+            my $contigfilbest = "$bestcontig_distrib_dir/${exon_name}_velvet_contigs.cap3ed.exonerated.filtered.best_contig.fasta";      
 
             if (-e $contigfilall) {
 
@@ -58,7 +57,7 @@ foreach my $exonfile (@exons) {
                 my @tmplines = split(/\n>/,$alltmpstring);
 
                 my $tmpnum = ( scalar @tmplines );
-                $contignum{$exon}{$lib} = $tmpnum;
+                $contignum{$exon_name}{$lib} = $tmpnum;
 
                 foreach my $tmplin (@tmplines) {
                     my ($name, $tmpseq) = split(/\n/,$tmplin, 2);
@@ -70,7 +69,7 @@ foreach my $exonfile (@exons) {
                 }
 
             } else {
-                $contignum{$exon}{$lib} = 0;
+                $contignum{$exon_name}{$lib} = 0;
             }
 
            if(-e $contigfilbest) {
