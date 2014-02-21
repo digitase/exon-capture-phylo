@@ -2,16 +2,16 @@ use strict;
 use warnings;
 
 # Sample name, samples directory, output directory, FASTA with all the targets to make the blast db, BLAST database name
-my ($lib, $readdir, $assemdir, $target_seqs_list, $np, $blastall_path) = @ARGV;
+my ($lib, $readdir, $assemdir, $fwd_suffix, $rev_suffix, $unpaired_suffix, $target_seqs_list, $np, $blastall_path) = @ARGV;
 
 # Expectation value for blastx
 my $eval = "1e-9";
 
 my $blast_dbs_dir = $assemdir . "/blast_dbs/";
-filtAssemb($readdir, $assemdir, $blast_dbs_dir, $lib, $eval, $np);
+filtAssemb($readdir, $assemdir, $blast_dbs_dir, $lib, $fwd_suffix, $rev_suffix, $unpaired_suffix, $eval, $np);
 
 sub filtAssemb {
-    my ($readdir, $assemdir, $blast_dbs_dir, $lib, $eval, $np) = @_;
+    my ($readdir, $assemdir, $blast_dbs_dir, $lib, $fwd_suffix, $rev_suffix, $unpaired_suffix, $eval, $np) = @_;
 
     # Create directory for sample
     my $assemlib = $assemdir . $lib . "/";
@@ -21,17 +21,17 @@ sub filtAssemb {
     # This section determines what the suffixes of the input read files need to be
     # TODO consider generic suffixes    
 
-    my $fil_1 = "$readdir/$lib" . "_1_final.fastq.gz";
-    my $fil_2 = "$readdir/$lib" . "_2_final.fastq.gz";
-    my $fil_u = "$readdir/$lib" . "_u_final.fastq.gz";
+    my $fil_1 = "$readdir/$lib" . "_$fwd_suffix.fastq.gz";
+    my $fil_2 = "$readdir/$lib" . "_$rev_suffix.fastq.gz";
+    my $fil_u = "$readdir/$lib" . "_$unpaired_suffix.fastq.gz";
 
-    my $blast_1 = "$assemlib/$lib" . "_1_final.against_targets.blast";
-    my $blast_2 = "$assemlib/$lib" . "_2_final.against_targets.blast";
-    my $blast_u = "$assemlib/$lib" . "_u_final.against_targets.blast";
+    my $blast_1 = "$assemlib/$lib" . "_$fwd_suffix.against_targets.blast";
+    my $blast_2 = "$assemlib/$lib" . "_$rev_suffix.against_targets.blast";
+    my $blast_u = "$assemlib/$lib" . "_$unpaired_suffix.against_targets.blast";
 
-    my $fasta_1 = "$assemlib/$lib" . "_1_final.fasta";
-    my $fasta_2 = "$assemlib/$lib" . "_2_final.fasta";
-    my $fasta_u = "$assemlib/$lib" . "_u_final.fasta";
+    my $fasta_1 = "$assemlib/$lib" . "_$fwd_suffix.fasta";
+    my $fasta_2 = "$assemlib/$lib" . "_$rev_suffix.fasta";
+    my $fasta_u = "$assemlib/$lib" . "_$unpaired_suffix.fasta";
 
     # do the blasting
     unless(-e "$blast_1") { blastProts($fil_1, $blast_1, $fasta_1, $blast_dbs_dir, $eval, $np); }

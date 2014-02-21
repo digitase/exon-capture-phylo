@@ -14,7 +14,7 @@ source $CONFIG_FILE
 # Prepare the blast dbs
 
 cd "$OUT_DIR"
-echo ===== Started prepare_data.sh with at $(date) =====
+echo ===== Started prepare_data.sh at $(date) =====
 
 echo prepareData at $(date)
 perl "$SCRIPT_DIR/pl/prepareData.pl" "$OUT_DIR" \

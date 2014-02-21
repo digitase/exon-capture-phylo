@@ -24,10 +24,14 @@ fi
 
 cd "$OUT_DIR" || exit 
 
+# Read list of sample names
+readarray -t SAMPLE_NAMES_ARRAY < "$SAMPLES_LIST"
+sample_num=${#SAMPLE_NAMES_ARRAY[@]}
+
 # Check if we not using a job array
 if [ -z "$SGE_TASK_ID" ] || [ "$SGE_TASK_ID" == "undefined" ]; then
 
-    echo Using xargs to run $XARGS_PARALLEL_SAMPLES samples in parallel 
+    echo Using xargs to run up to $XARGS_PARALLEL_SAMPLES samples of a total of $sample_num samples in parallel 
 
     # prepare data
     "$SCRIPT_DIR/sh/prepare_data.sh" "$SCRIPT_DIR/$CONFIG_FILE"
@@ -44,8 +48,6 @@ if [ -z "$SGE_TASK_ID" ] || [ "$SGE_TASK_ID" == "undefined" ]; then
 # We are using a job array
 else
 
-    readarray -t SAMPLE_NAMES_ARRAY < "$SAMPLES_LIST"
-    sample_num=${#SAMPLE_NAMES_ARRAY[@]}
     sample_name=${SAMPLE_NAMES_ARRAY[$SGE_TASK_ID - 1]}
     host_name="$(hostname)"
     echo SGE Job Array SGE_TASK_ID="$SGE_TASK_ID" detected. Processing sample "$sample_name" out of "$sample_num" samples on "$host_name"
