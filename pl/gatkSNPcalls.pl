@@ -22,14 +22,13 @@ sub prepareBAMandRef {
     my ($lib, $ref, $bam, $gatkSNPcalls_dir, $picard_dir) = @_;
 
     # Sample names are of this format SP04_indexing12
-    my ($lane, $samp) = split(/_/, $lib);
     my $ibamrg = "$gatkSNPcalls_dir/$lib.ReadGrouped.bam";
     my $logfile = "$gatkSNPcalls_dir/$lib.picard.log";
 
     # Add read groups to BAM
     # Set max heap size
     my $AddOrRepl = "java -Xmx${java_heap_size}g -jar $picard_dir/AddOrReplaceReadGroups.jar";
-    system("$AddOrRepl INPUT=$bam OUTPUT=$ibamrg RGID=$lib RGLB=$lib RGPU=$lane RGPL=illumina RGSM=$samp 2> $logfile");   
+    system("$AddOrRepl INPUT=$bam OUTPUT=$ibamrg RGID=$lib RGLB=$lib RGPU=$lib RGPL=illumina RGSM=$lib 2> $logfile");   
 
     # Index BAM file
     system("$samtools_path index $ibamrg");

@@ -26,7 +26,7 @@ echo assembleByProt "[$sample_name]" at $(date)
 perl "$SCRIPT_DIR/pl/assembleByProtv2.pl" "$sample_name" "$SAMPLES_DIR" "$OUT_DIR" \
                                           "$FORWARD_READS_SUFFIX" "$REVERSE_READS_SUFFIX" "$UNPAIRED_READS_SUFFIX" \
                                           "$TARGET_PROTEIN_SEQS_LIST" \
-                                          "$BLAST_PROCS_PER_SAMPLE" "$BLASTALL_PATH"
+                                          "$BLAST_PROCS_PER_SAMPLE" "$BLASTALL_PATH" "$BLAST_EVALUE"
 
 # 2. callVelvetAssemblies
 echo callVelvetAssemblies "[$sample_name]" at $(date)

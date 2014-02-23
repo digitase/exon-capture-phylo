@@ -2,10 +2,9 @@ use strict;
 use warnings;
 
 # Sample name, samples directory, output directory, FASTA with all the targets to make the blast db, BLAST database name
-my ($lib, $readdir, $assemdir, $fwd_suffix, $rev_suffix, $unpaired_suffix, $target_seqs_list, $np, $blastall_path) = @ARGV;
+my ($lib, $readdir, $assemdir, $fwd_suffix, $rev_suffix, $unpaired_suffix, $target_seqs_list, $np, $blastall_path, $eval) = @ARGV;
 
 # Expectation value for blastx
-my $eval = "1e-9";
 
 my $blast_dbs_dir = $assemdir . "/blast_dbs/";
 filtAssemb($readdir, $assemdir, $blast_dbs_dir, $lib, $fwd_suffix, $rev_suffix, $unpaired_suffix, $eval, $np);
@@ -128,18 +127,25 @@ assembleByProt
 
 =head1 SYNOPSIS
 
-BLASTx sample reads against target proteins and gather reads aligned to each target
 
 =head1 USAGE
 
 $lib, $readdir, $assemdir, $target_seqs_list, $np
 Sample name, samples directory, output directory, database name, target protein IDs list, num of parallel blast processes
 
-=head1 DESCRIPTION OF ARGUMENTS
+=head1 DESCRIPTION
 
-to be continued...
+BLASTx sample reads against target proteins and gather reads aligned to each target
 
 =head1 SUBROUTINES
+
+=over 12
+
+over 12
+
+=item C<new>
+
+item
 
 Use CPAN style http://juerd.nl/site.plp/perlpodtut
 
