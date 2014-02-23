@@ -1,9 +1,8 @@
+# Documentation @ __END__
+# WARNING: not designed for use as a standalone module.
+
 use warnings;
 use strict;
-
-# my $readdir  = "/home2/jgb/reads/";
-# my $assemdir = "/home2/jgb/assemble/crypto/";
-# my $lib = $ARGV[0];
 
 my ($lib, $readdir, $assemdir, $fwd_suffix, $rev_suffix, $unpaired_suffix, $bowtie2build_path, $bowtie2_path, $samtools_path) = @ARGV;
 

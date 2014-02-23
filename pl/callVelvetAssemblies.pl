@@ -18,6 +18,7 @@ chomp(@protnames);
 close(TARGET_SEQS_LIST);
 
 foreach my $protname (@protnames) {
+
     # Create directory for specific k-value
     my $veldir = "$assemlib/$protname/${protname}_call_velvet_assemblies/";
     unless(-e $veldir or mkdir $veldir) { die "[ERROR callVelvetAssemblies $lib $k] Could not make $veldir\n"; }
@@ -95,11 +96,11 @@ None.
 
 =over 
 
-=item [ERROR callVelvetAssemblies $lib $k] ... 
+=item [ERROR callVelvetAssemblies $lib $k] Could not make ...
 
 File or directory creation failed. Check that you have adequate permissions in the output directory.
 
-=item [ERROR callVelvetAssemblies $lib $k] Could not open target protein IDs list...
+=item [ERROR callVelvetAssemblies $lib $k] Could not open target protein IDs list ...
 
 Check that TARGET_PROTEIN_SEQS_LIST is set correctly in the config file.
 

@@ -20,8 +20,8 @@ perl "$SCRIPT_DIR/pl/assembleByProtv2.pl" "$sample_name" "$SAMPLES_DIR" "$OUT_DI
 # 2. callVelvetAssemblies
 echo callVelvetAssemblies "[$sample_name]" at $(date)
 printf "%s\n" "${VELVET_K_VALUES[@]}" | xargs -n 1 -I {} perl "$SCRIPT_DIR/pl/callVelvetAssemblies.pl" \
-                                                                  "$sample_name" "$OUT_DIR" "$TARGET_PROTEIN_SEQS_LIST" \
-                                                                      "$VELVETH_PATH" "$VELVETG_PATH" {} 
+                                                              "$sample_name" "$OUT_DIR" "$TARGET_PROTEIN_SEQS_LIST" \
+                                                              "$VELVETH_PATH" "$VELVETG_PATH" {} 
 
 # 3. catcontigs
 echo catContigs "[$sample_name]" at $(date)
@@ -30,7 +30,7 @@ perl "$SCRIPT_DIR/pl/catcontigs.pl" "$sample_name" "$OUT_DIR" \
                                     "$CAP3_PATH" "$EXONERATE_PATH" \
                                     ${VELVET_K_VALUES[@]}
 
-# 4. callBestContig
+# 4. bestcontig_distrib
 echo bestcontig_distrib "[$sample_name]" at $(date)
 perl "$SCRIPT_DIR/pl/bestcontig_distrib.pl" "$sample_name" "$OUT_DIR" \
                                             "$ALL_EXON_SEQS" "$TARGET_EXON_SEQS_LIST" \

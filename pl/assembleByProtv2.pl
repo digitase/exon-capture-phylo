@@ -95,6 +95,7 @@ sub getbest {
 
     # For each protein that received hits
     foreach my $prot (keys %prothits) {
+
         # Create script output directory structure for target
         my $poutdir = "$assemlib/$prot/";
         unless(-d $poutdir or mkdir $poutdir) { die "[ERROR assembleByProt $lib] Could not create target protein output directory $poutdir\n"; }
@@ -110,6 +111,7 @@ sub getbest {
         foreach my $seqhitprot (keys %{$prothits{$prot}}) {
             print POUT ">$seqhitprot\n$prothits{$prot}{$seqhitprot}\n";
         }
+
         close(POUT);
     }
 }
@@ -198,9 +200,9 @@ Collate reads from sample reads FASTA file $fasta that aligned in the BLASTx out
 
 =over 
 
-=item [ERROR assembleByProt $lib] ... 
+=item [ERROR assembleByProt $lib] Could not open/Could not create/Failed to open ...
 
-File or directory creation failed. Check that you have adequate permissions in the output directory.
+Required input/output file/directory not openable. Check that you have adequate permissions in the output directory. Check that the specified files exist.
 
 =back
 
