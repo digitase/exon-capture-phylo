@@ -1,3 +1,6 @@
+# Documentation @ __END__
+# WARNING: not designed for use as a standalone module.
+
 use warnings;
 use strict;
 

@@ -16,7 +16,7 @@ sub filtAssemb {
 
     # Create directory for sample
     my $assemlib = "$assemdir/$lib/";
-    unless(-d $assemlib or mkdir $assemlib) { die "[WARNING assembleByProt] Could not mkdir $assemlib\n"; }    
+    unless(-d $assemlib or mkdir $assemlib) { die "[ERROR assembleByProt $lib] Could not mkdir $assemlib\n"; }    
 
     # Set IO paths
     my $fil_1 = "$readdir/$lib" . "_$fwd_suffix.fastq.gz";
@@ -65,14 +65,14 @@ sub blastProts {
 sub getbest {
     my ($assemlib, $fasta, $blast, $f, $target_seqs_list) = @_;
 
-    open TARGET_SEQS_LIST, "<$target_seqs_list" or die "[WARNING assembleByProt] Could not open the target IDs list";
+    open TARGET_SEQS_LIST, "<$target_seqs_list" or die "[ERROR assembleByProt $lib] Could not open the target IDs list";
     my @protnames = <TARGET_SEQS_LIST>;
     chomp(@protnames);
     close(TARGET_SEQS_LIST);
 
     # Hash of sequence IDs -> sequences
     my %fasta;
-    open(FA, "<$fasta") or die "[WARNING assembleByProt] Failed to open FASTA file $fasta\n";
+    open(FA, "<$fasta") or die "[ERROR assembleByProt $lib] Failed to open FASTA file $fasta\n";
     while(<FA>) {
         # This is fine as read files have alternating ID read lines
         my $seqnm = $_;
@@ -85,7 +85,7 @@ sub getbest {
         
     # Hash of protein names -> sequence IDs aligned to the prot -> sequences
     my %prothits = map { $_ => {} } @protnames;
-    open(BLOUT, "<$blast") or die "[WARNING assembleByProt] Failed to open BLAST output file $blast\n";
+    open(BLOUT, "<$blast") or die "[ERROR assembleByProt $lib] Failed to open BLAST output file $blast\n";
     while(<BLOUT>) {
        my @linbits = split(/\t/, $_);
        my $hitseqnm = $linbits[0];
@@ -97,16 +97,16 @@ sub getbest {
     foreach my $prot (keys %prothits) {
         # Create script output directory structure for target
         my $poutdir = "$assemlib/$prot/";
-        unless(-d $poutdir or mkdir $poutdir) { die "[WARNING assembleByProt] Could not create exon output directory $poutdir\n"; }
+        unless(-d $poutdir or mkdir $poutdir) { die "[ERROR assembleByProt $lib] Could not create target protein output directory $poutdir\n"; }
 
         my $assemble_by_prot_dir = "$poutdir/${prot}_assemble_by_prot/";
         unless(-d $assemble_by_prot_dir or mkdir $assemble_by_prot_dir) {
-            die "[WARNING assembleByProt] Could not create assembleByProt output directory $assemble_by_prot_dir\n";
+            die "[ERROR assembleByProt $lib] Could not create assembleByProt output directory $assemble_by_prot_dir\n";
         }
 
         # Append the reads to the output file
         my $poutfil = "$assemble_by_prot_dir/${prot}_${f}_hitreads.fasta";
-        open(POUT, ">$poutfil") or die "[WARNING assembleByProt] Failed to open poutfil $poutfil\n"; 
+        open(POUT, ">$poutfil") or die "[ERROR assembleByProt $lib] Failed to open output hitreads file $poutfil\n"; 
         foreach my $seqhitprot (keys %{$prothits{$prot}}) {
             print POUT ">$seqhitprot\n$prothits{$prot}{$seqhitprot}\n";
         }
@@ -118,15 +118,15 @@ __END__
 
 =head1 NAME
 
-assembleByProt - BLASTx sample reads onto target proteins and collate reads that align from each file.
+assembleByProtv2 - BLASTx sample reads onto target proteins and collate reads that align from each file.
 
 =head1 USAGE
 
 =over
 
-=item B<perl assembleByProt.pl [ARGS]>
+=item B<perl assembleByProtv2.pl [ARGS]>
 
-All arguments are required.
+All arguments are required, in order.
 
 =back
 
@@ -160,7 +160,7 @@ Filename suffix for unpaired read files.
 
 =item $target_seqs_list
 
-Text file with target exon IDs.
+Text file with target protein IDs.
 
 =item $np
 
@@ -198,7 +198,7 @@ Collate reads from sample reads FASTA file $fasta that aligned in the BLASTx out
 
 =over 
 
-=item [WARNING assembleByProt] ... 
+=item [ERROR assembleByProt $lib] ... 
 
 File or directory creation failed. Check that you have adequate permissions in the output directory.
 

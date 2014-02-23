@@ -1,26 +1,13 @@
 #!/bin/bash
-
-# 1. assembleByProt
-#       BLASTx sample reads to target proteins and collect reads hit to each target protein from each read file.
-
-# 2. callVelvetAssemblies
-#       Assemble reads hit to each target with Velvet.
-
-# 3. catContigs
-#     Use CAP3 to merge redundant contigs.
-#     exonerate: extract exon sequence
-
-# 4. callBestContig
-#     blastx: exon sequences to Anolis targets
-#     select one exon by reciprocal best hit
-
-# 5. best2ref
-
+# Use perldoc <script_name> for documentation on each pipeline component.
+# AUTHOR: Ben Bai (u5205339@anu.edu.au)
+# DATE: Nov 2013-Feb 2014
 
 # Include the config file, which is in valid bash format
 sample_name="$1"
 CONFIG_FILE="$2"
 source "$CONFIG_FILE"
+
 echo ===== Started assemble_exons.sh with "[$sample_name]" at $(date) =====
 
 # 1. assembleByProt
