@@ -1,25 +1,24 @@
+# Documentation @ __END__
+# WARNING: not designed for use as a standalone module.
+
 use strict;
 use warnings;
 
-# Sample name, samples directory, output directory, FASTA with all the targets to make the blast db, BLAST database name
 my ($lib, $readdir, $assemdir, $fwd_suffix, $rev_suffix, $unpaired_suffix, $target_seqs_list, $np, $blastall_path, $eval) = @ARGV;
 
-# Expectation value for blastx
-
-my $blast_dbs_dir = $assemdir . "/blast_dbs/";
+my $blast_dbs_dir = "$assemdir/blast_dbs/";
 filtAssemb($readdir, $assemdir, $blast_dbs_dir, $lib, $fwd_suffix, $rev_suffix, $unpaired_suffix, $eval, $np);
+
+# Subroutines
 
 sub filtAssemb {
     my ($readdir, $assemdir, $blast_dbs_dir, $lib, $fwd_suffix, $rev_suffix, $unpaired_suffix, $eval, $np) = @_;
 
     # Create directory for sample
-    my $assemlib = $assemdir . $lib . "/";
-    unless(-d $assemlib or mkdir $assemlib) { die "Could not mkdir $assemlib\n"; }    
+    my $assemlib = "$assemdir/$lib/";
+    unless(-d $assemlib or mkdir $assemlib) { die "[WARNING assembleByProt] Could not mkdir $assemlib\n"; }    
 
-    # Paths to read files
-    # This section determines what the suffixes of the input read files need to be
-    # TODO consider generic suffixes    
-
+    # Set IO paths
     my $fil_1 = "$readdir/$lib" . "_$fwd_suffix.fastq.gz";
     my $fil_2 = "$readdir/$lib" . "_$rev_suffix.fastq.gz";
     my $fil_u = "$readdir/$lib" . "_$unpaired_suffix.fastq.gz";
@@ -32,21 +31,20 @@ sub filtAssemb {
     my $fasta_2 = "$assemlib/$lib" . "_$rev_suffix.fasta";
     my $fasta_u = "$assemlib/$lib" . "_$unpaired_suffix.fasta";
 
-    # do the blasting
+    # Blast reads against target proteins
     unless(-e "$blast_1") { blastProts($fil_1, $blast_1, $fasta_1, $blast_dbs_dir, $eval, $np); }
     unless(-e "$blast_2") { blastProts($fil_2, $blast_2, $fasta_2, $blast_dbs_dir, $eval, $np); }
     unless(-e "$blast_u") { blastProts($fil_u, $blast_u, $fasta_u, $blast_dbs_dir, $eval, $np); }
 
-    # for each exon that was hit by reads from a file, collate those reads
+    # For each target protein that was hit by reads from a file, collate those reads
     my $call_1  = getbest($assemlib, $fasta_1, $blast_1, "1" , $target_seqs_list);
     my $call_2  = getbest($assemlib, $fasta_2, $blast_2, "2" , $target_seqs_list);
     my $call_u  = getbest($assemlib, $fasta_u, $blast_u, "u" , $target_seqs_list);
 
-    # for each exon that was hit by reads from a file, collate those reads with the same sequence ID from the paired file
+    # Collate those reads with the same sequence ID from the paired file
     my $call_1p = getbest($assemlib, $fasta_2, $blast_1, "1p", $target_seqs_list);
     my $call_2p = getbest($assemlib, $fasta_1, $blast_2, "2p", $target_seqs_list);
 }
-
 
 sub blastProts {
     my ($fil, $blast, $fasta, $blast_dbs_dir, $eval, $np) = @_;
@@ -55,6 +53,7 @@ sub blastProts {
     my $start_time = localtime();
     print "Blasting $fil against target proteins with legacy BLAST at $start_time\n";
 
+    # Read sample reads file, convert to FASTA and save a copy, split into blocks and BLASTx
     system(qq(
         zcat $fil | 
         awk '{if(NR % 4 == 1 || NR % 4 == 2) {sub(/@/, ">"); print; } }' | 
@@ -63,22 +62,20 @@ sub blastProts {
     ));
 }
 
-# 
 sub getbest {
     my ($assemlib, $fasta, $blast, $f, $target_seqs_list) = @_;
 
-    open TARGET_SEQS_LIST, "<$target_seqs_list" or die "could not open the target IDs list";
+    open TARGET_SEQS_LIST, "<$target_seqs_list" or die "[WARNING assembleByProt] Could not open the target IDs list";
     my @protnames = <TARGET_SEQS_LIST>;
     chomp(@protnames);
     close(TARGET_SEQS_LIST);
 
-    # Hash of sequence names -> sequences
+    # Hash of sequence IDs -> sequences
     my %fasta;
-    open(FA, "<$fasta") or die "Failed to open FASTA file $fasta\n";
-    while (<FA>)
-    {
-        my $seqnm = $_;
+    open(FA, "<$fasta") or die "[WARNING assembleByProt] Failed to open FASTA file $fasta\n";
+    while(<FA>) {
         # This is fine as read files have alternating ID read lines
+        my $seqnm = $_;
         my $seq   = <FA>;
         $seqnm =~ s/>//;
         chomp($seqnm); chomp($seq);
@@ -86,31 +83,30 @@ sub getbest {
     }
     close FA;
         
-    # Hash of protein names -> hit sequence names to the prot -> sequences
+    # Hash of protein names -> sequence IDs aligned to the prot -> sequences
     my %prothits = map { $_ => {} } @protnames;
-    open(BLOUT, "<$blast") or die "Failed to open BLAST output file $blast\n";
-    while(<BLOUT>) 
-    {
+    open(BLOUT, "<$blast") or die "[WARNING assembleByProt] Failed to open BLAST output file $blast\n";
+    while(<BLOUT>) {
        my @linbits = split(/\t/, $_);
        my $hitseqnm = $linbits[0];
        my $hitsprot = $linbits[1];
        $prothits{$hitsprot}{$hitseqnm} = $fasta{ $hitseqnm };
     }
 
+    # For each protein that received hits
     foreach my $prot (keys %prothits) {
-
         # Create script output directory structure for target
         my $poutdir = "$assemlib/$prot/";
-        unless(-d $poutdir or mkdir $poutdir) { die "Could not create exon output directory $poutdir\n"; }
+        unless(-d $poutdir or mkdir $poutdir) { die "[WARNING assembleByProt] Could not create exon output directory $poutdir\n"; }
 
         my $assemble_by_prot_dir = "$poutdir/${prot}_assemble_by_prot/";
         unless(-d $assemble_by_prot_dir or mkdir $assemble_by_prot_dir) {
-            die "Could not create assembleByProt output directory $assemble_by_prot_dir\n";
+            die "[WARNING assembleByProt] Could not create assembleByProt output directory $assemble_by_prot_dir\n";
         }
 
-        # Gather reads that blast hit onto target
+        # Append the reads to the output file
         my $poutfil = "$assemble_by_prot_dir/${prot}_${f}_hitreads.fasta";
-        open(POUT, ">$poutfil") or die "Failed to open poutfil $poutfil\n"; 
+        open(POUT, ">$poutfil") or die "[WARNING assembleByProt] Failed to open poutfil $poutfil\n"; 
         foreach my $seqhitprot (keys %{$prothits{$prot}}) {
             print POUT ">$seqhitprot\n$prothits{$prot}{$seqhitprot}\n";
         }
@@ -118,71 +114,124 @@ sub getbest {
     }
 }
 
-
 __END__
 
 =head1 NAME
 
-assembleByProt
-
-=head1 SYNOPSIS
-
+assembleByProt - BLASTx sample reads onto target proteins and collate reads that align from each file.
 
 =head1 USAGE
 
-$lib, $readdir, $assemdir, $target_seqs_list, $np
-Sample name, samples directory, output directory, database name, target protein IDs list, num of parallel blast processes
+=over
 
-=head1 DESCRIPTION
+=item B<perl assembleByProt.pl [ARGS]>
 
-BLASTx sample reads against target proteins and gather reads aligned to each target
+All arguments are required.
+
+=back
+
+=head1 ARGUMENTS
+
+=over
+
+=item $lib
+
+Sample name.
+
+=item $readdir
+
+Directory containing cleaned read files.
+
+=item $assemdir
+
+Output directory.
+
+=item $fwd_suffix
+
+Filename suffix for forward read files.
+
+=item $rev_suffix
+
+Filename suffix for reverse read files.
+
+=item $unpaired_suffix
+
+Filename suffix for unpaired read files.
+
+=item $target_seqs_list
+
+Text file with target exon IDs.
+
+=item $np
+
+Number of BLASTx processes to use.
+
+=item $blastall_path
+
+Path to blastall binary.
+
+=item $eval
+
+BLASTx expectation value.
+
+=back
 
 =head1 SUBROUTINES
 
-=over 12
+=over
 
-over 12
+=item filtAssemb
 
-=item C<new>
+Locate input filenames based on $*_suffix arguments and call blastProts and getbest.
 
-item
+=item blastProts
 
-Use CPAN style http://juerd.nl/site.plp/perlpodtut
+BLASTx sample reads $fil against target proteins database with expectation value of $eval using $np processes.
+
+=item getbest
+
+Collate reads from sample reads FASTA file $fasta that aligned in the BLASTx output file $blast to each target in $target_seqs_list.
+
+=back
 
 =head1 DIAGNOSTICS
 
-List of errors...
+=over 
+
+=item [WARNING assembleByProt] ... 
+
+File or directory creation failed. Check that you have adequate permissions in the output directory.
+
+=back
 
 =head1 DEPENDENCIES
 
 NCBI blastall
+
 GNU parallel
 
-=head1 BUGS AND LIMITATIONS
+=head1 KNOWN BUGS
 
-NCBI blastall is being phased out...
+None.
+
+=head1 NOTES
+
+Uses legacy blastall due to performance gains over BLAST+ with short reads as queries.
 
 =head1 AUTHORS
 
-Dr. Jason Bragg, ANU
-Ben Bai, ANU
+Ben Bai, ANU (u5205339@anu.edu.au)
 
-=head1 AUTHORS' COMMENTS
+Dr. Jason Bragg, ANU (jason.bragg@anu.edu.au)
 
-=head2 Why not BLAT?
+=head1 SEE ALSO
 
-BLAT (BLAST-like Alignment Tool) is a sequence alignment tool similar to BLAST but structured differently. BLAT quickly finds similarity in DNA and protein but it needs an exact or nearly-exact match to find a hit. Therefore Blat is not as flexible as BLAST. Since BLAST can find much more remote matches than Blat, it is the recommended tool when searching more distantly related sequences.
-
-=head2 Why not BLAST+?
-
-Speed...
-
-=head2 Why the stringent expectation value?
-
-Blah...
+exon-capture-phylo Design and Usage manual
 
 =head1 LICENCE AND COPYRIGHT
 
-GNU Public
+Copyleft 2013-2014 by the authors.
+
+This script is free software; you can redistribute it and/or modify it under the same terms as Perl itself. 
 
 =cut

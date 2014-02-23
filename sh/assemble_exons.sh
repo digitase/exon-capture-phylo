@@ -1,19 +1,21 @@
 #!/bin/bash
 
 # 1. assembleByProt
-    # blastx: transcriptome library on a list to Anolis targets 
-    # collect reads hit to each target
+#       BLASTx sample reads to target proteins and collect reads hit to each target protein from each read file.
 
 # 2. callVelvetAssemblies
-#     Velvet: assemble exons at 6 k-values
+#       Assemble reads hit to each target with Velvet.
 
 # 3. catContigs
-#     CAP3: combine (perfectly) overlapping contigs
+#     Use CAP3 to merge redundant contigs.
 #     exonerate: extract exon sequence
 
 # 4. callBestContig
 #     blastx: exon sequences to Anolis targets
 #     select one exon by reciprocal best hit
+
+# 5. best2ref
+
 
 # Include the config file, which is in valid bash format
 sample_name="$1"
@@ -47,7 +49,7 @@ perl "$SCRIPT_DIR/pl/bestcontig_distrib.pl" "$sample_name" "$OUT_DIR" \
                                             "$ALL_EXON_SEQS" "$TARGET_EXON_SEQS_LIST" \
                                             "$MIN_OVERLAP" "$EXONERATE_PATH" "$BLASTALL_PATH"
 
-# 5. gather best contigs from each exon
+# 5. best2ref
 echo best2ref "[$sample_name]" at $(date)
 perl "$SCRIPT_DIR/pl/best2refs.pl" "$sample_name" "$OUT_DIR" "$TARGET_EXON_SEQS_LIST"
 
