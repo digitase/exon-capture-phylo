@@ -13,8 +13,7 @@ echo ===== Started gather_exons.sh at $(date) =====
 
 # 9. gatherContigs
 echo gathercontigs at $(date)
-perl "$SCRIPT_DIR/pl/gathercontigs.pl" "$OUT_DIR" "$SAMPLES_LIST" "$TARGET_PROTEIN_SEQS_LIST" \
-                                       "$TARGET_EXON_SEQS_LIST"
+perl "$SCRIPT_DIR/pl/gathercontigs.pl" "$OUT_DIR" "$SAMPLES_LIST" "$TARGET_EXON_SEQS_LIST"
 
 # 10. gatherAmbigContigs
 echo gatherAmbigContigs at $(date)

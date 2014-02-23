@@ -10,7 +10,7 @@ my $best2refs_dir = "$assemdir/$lib/${lib}_best2refs/";
 unless(-e $best2refs_dir or mkdir $best2refs_dir) { die "[ERROR best2refs $lib] Could not make $best2refs_dir\n"; }
 
 # Open target exons list
-open EXONS, "<$exonlist" or die "[ERROR best2refs $lib] Could not open the exons list file $exonlist";
+open EXONS, "<$exonlist" or die "[ERROR best2refs $lib] Could not open the exons list file $exonlist\n";
 my @exons = <EXONS>;
 close(EXONS);
 chomp(@exons);

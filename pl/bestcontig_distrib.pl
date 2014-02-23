@@ -70,7 +70,7 @@ sub getTargetRegionInProtein {
     # Return beginning and end of the query region in the alignment by parsing the ryo format
     my $nameline = $lines[0];
     if (scalar(@lines) == 0) {
-        warn "[WARNING bestcontig_distrib] No prot-exon exonerate alignment between $exonerate_query and $exonerate_target\n";
+        warn "[WARNING bestcontig_distrib $lib] No prot-exon exonerate alignment between $exonerate_query and $exonerate_target\n";
         return("0", "0");
     } elsif ($nameline =~ / b(\d+) e(\d+) p/) {
         my $b = $1; my $e = $2;
@@ -100,7 +100,7 @@ sub filterExoneratedContigs {
 
         my $contig_name; my $b; my $e; 
         if (scalar(@contig_file_lines) == 0) {
-            warn "[WARNING bestcontig_distrib] No prot-contig exonerate alignment in $exonerated_contigs detected\n";
+            warn "[WARNING bestcontig_distrib $lib] No prot-contig exonerate alignment in $exonerated_contigs detected\n";
             $contig_name = ""; $b = "0"; $e = "0";
         } elsif ($contig_name_line =~ /^>(\S+) b(\d+) e(\d+) p/) {
             # by extracting contig-protein alignment region
@@ -120,7 +120,7 @@ sub filterExoneratedContigs {
             $contig_num++;
         } else {
             # Warn of failures
-            warn "[WARNING bestcontig_distrib] $exon_name $contig_name_line failed filtering. Overlap=$overlap_ratio. Required=$minoverlap\n";
+            warn "[WARNING bestcontig_distrib $lib] $exon_name $contig_name_line failed filtering. Overlap=$overlap_ratio. Required=$minoverlap\n";
         }
     }
     close OUT;
@@ -173,10 +173,10 @@ sub getBestContig {
             }
         }
     } elsif (scalar(@blastlines) == 0) {
-        warn "[WARNING bestcontig_distrib] No blast hits in $blastout\n";
+        warn "[WARNING bestcontig_distrib $lib] No blast hits in $blastout\n";
     } else {
         # Otherwise warn of rejected best hits
-        warn "[WARNING bestcontig_distrib] The best contig $bestcontig failed reciprocal best-hit blast. Best hit was to $bestprothit\n";
+        warn "[WARNING bestcontig_distrib $lib] The best contig $bestcontig failed reciprocal best-hit blast. Best hit was to $bestprothit\n";
     }
     close BEST;
 }
@@ -261,7 +261,7 @@ File or directory creation failed. Check that you have adequate permissions in t
 
 Required input/output file not openable. Check that previous pipeline stages have completed successfully, and the specified files exist. Check that you have adequate permissions in the output directory.
 
-=item [WARNING bestcontig_distrib] No prot-exon exonerate alignment ...
+=item [WARNING bestcontig_distrib $lib] No prot-exon exonerate alignment ...
 
 A target protein and target exon did not align with exonerate. Check that the exon is named correctly, and is orthologous to the target protein.
 
@@ -269,7 +269,7 @@ A target protein and target exon did not align with exonerate. Check that the ex
 
 Could not find alignment range in exonerate file due to malformed sequence ID line. Check for file corruption.
 
-=item [WARNING bestcontig_distrib] No prot-contig exonerate alignment ...
+=item [WARNING bestcontig_distrib $lib] No prot-contig exonerate alignment ...
 
 Target protein did not align with exonerate to any assembled contigs. Check that previous pipeline stages completed successfully, and that there are assembled contigs in the given filename.
 
