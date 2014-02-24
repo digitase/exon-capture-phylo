@@ -12,7 +12,7 @@ Clone the scripts onto your computer:
 
 Take a look at our `demo.config` configuration template and modify it for your machine.
 
-Download our demo dataset `demo_data.tar.gz` from [link](http://example.com)
+Download our demo dataset `demo_data.tar.gz` from [link](https://docs.google.com/file/d/0B4t9UUDOrtFnRzlNQVV4bHZ5LWc/edit)
 
 Documentation
 -------------
@@ -44,6 +44,3 @@ TODO
     Choosing BLAST options for better detection of orthologs as reciprocal best hits
     Bioinformatics (2008) 24 (3): 319-324
     first published online November 26, 2007 doi:10.1093/bioinformatics/btm585 
-
-* Link demo dataset (with readme)
-
