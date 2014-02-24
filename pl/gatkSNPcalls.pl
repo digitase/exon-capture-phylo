@@ -1,3 +1,5 @@
+#!/usr/bin/perl -w
+
 # Documentation @ __END__
 # WARNING: not designed for use as a standalone module.
 
@@ -56,17 +58,21 @@ sub callGATK {
 
     my $logfile = "$gatkSNPcalls_dir/$lib.gatk.log";
 
+    # Call variants
     my $vcf = "$ibamrg_basepath.vcf";
     system("$gatk -R $ref -T HaplotypeCaller  -I $ibamrg -o $vcf >> $logfile");
 
+    # Phase calls
     my $phased_vcf = "$ibamrg_basepath.ReadBackedPhased.vcf";
     system("$gatk -R $ref -T ReadBackedPhasing -I $ibamrg --variant $vcf --min_base_quality_score 21 -o $phased_vcf >> $logfile");
 
+    # Add HaplotypeScore and DP annotations
     my $annotated_vcf = "$ibamrg_basepath.ReadBackedPhased.VariantAnnotated.vcf";
     system("$gatk -R $ref -T VariantAnnotator  -I $ibamrg -A DepthPerAlleleBySample -A HaplotypeScore --variant $phased_vcf -o $annotated_vcf >> $logfile");
 
+    # Filter out variant positions with DP < 16 by setting the FILTER field to "lowDepth"
     my $filtered_vcf = "$ibamrg_basepath.ReadBackedPhased.VariantAnnotated.VariantFiltered.vcf";
-    system("$gatk -R $ref -T VariantFiltration  -o $filtered_vcf --variant $annotated_vcf --filterName depth --filterExpression \"DP \< 16\" >> $logfile");
+    system("$gatk -R $ref -T VariantFiltration  -o $filtered_vcf --variant $annotated_vcf --filterName lowDepth --filterExpression \"DP \< 16\" >> $logfile");
 
     # DepthOfCoverage analysis
     system("$gatk -R $ref -T DepthOfCoverage -I $ibamrg -o $ibamrg_basepath.DepthOfCoverageTable >> $logfile"); 
@@ -162,7 +168,10 @@ None.
 
 =head1 NOTES
 
-None.
+The meaning of DP from: http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walkers_annotator_DepthPerAlleleBySample.html
+    "...the sample-level (FORMAT) DP field describes the total depth of reads that passed the caller's internal quality control metrics (like MAPQ > 17, for example)."
+
+The VariantFiltration filterExpression is DP < 16 as any variants with less than 16 coverage will have the FILTER info field "PASS" replaced with "lowDepth". Only variants with "PASS" are used downstream.
 
 =head1 AUTHORS
 
