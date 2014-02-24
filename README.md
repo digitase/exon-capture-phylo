@@ -25,11 +25,14 @@ For additional POD documentation for each Perl script, run:
     
     perldoc <script_name>.pl
 
-Contacts
+Authors
 --------
 
 * Ben Bai, ANU (u5205339@anu.edu.au)
+  * Pipeline design and streamlining
+
 * Dr. Jason Bragg, ANU (jason.bragg@anu.edu.au)
+  * Core methodology and original scripts
 
 License and copyright
 ---------------------
