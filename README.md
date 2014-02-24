@@ -10,9 +10,11 @@ Clone the scripts onto your computer:
 
     git clone git://github.com/digitase/exon-capture-phylo.git
 
-Take a look at our `demo.config` configuration template and modify it for your machine.
+Take a look at our `demo.config` configuration template.
 
-Download our demo dataset `demo_data.tar.gz` from [link](https://docs.google.com/file/d/0B4t9UUDOrtFnRzlNQVV4bHZ5LWc/edit)
+Download our demo dataset `demo_data.tar.gz` from [link](https://docs.google.com/file/d/0B4t9UUDOrtFnRzlNQVV4bHZ5LWc/edit).
+
+See the "Demo usage" section of `exon-capture-phylo_manual.pdf`
 
 Documentation
 -------------
@@ -33,7 +35,8 @@ License and copyright
 ---------------------
 
 Copyleft 2013-2014 by the authors.
-This script is free software; you can redistribute it and/or modify it under the same terms as Perl itself. 
+
+This package is free software; you can redistribute it and/or modify it under the same terms as Perl itself (GNU GENERAL PUBLIC LICENSE).
 
 TODO
 ----

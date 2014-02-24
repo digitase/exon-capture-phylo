@@ -1,12 +1,14 @@
 #!/bin/bash
 
-# SGE configuration
+# SGE configuration region
+# Lines with a missing '$' are inactive options
+
 #$ -cwd
-#$ -M u5205339@anu.edu.au
+# -M <email>
 #$ -m bea
-#$ -N job_exon_capture_phylo
+# -N <custom_job_name>
 #$ -R y
-#$ -l virtual_free=10G,h_vmem=12G
+#$ -l virtual_free=8G,h_vmem=10G
 #$ -tc 4
 #$ -t 1-2
 
