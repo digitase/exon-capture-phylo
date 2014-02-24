@@ -19,7 +19,7 @@ See the "Demo usage" section of `exon-capture-phylo_manual.pdf`
 Documentation
 -------------
 
-Detailed usage information can be found in `exon-capture-phylo_manual.pdf`
+Detailed usage information can be found in `ECP_MANUAL.pdf`
 
 For additional POD documentation for each Perl script, run:
     
