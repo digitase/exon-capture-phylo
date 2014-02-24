@@ -1,3 +1,5 @@
+#!/usr/bin/perl -w
+
 # Documentation @ __END__
 # WARNING: not designed for use as a standalone module.
 
@@ -18,7 +20,7 @@ chomp(@exons);
 close(EXONS);
 
 foreach my $exon_name (@exons) {
-    if ($exon_name =~ /^(\S+?)_exon\S+/) {
+    if ($exon_name =~ /^(\S+?)_\S+/) {
 
         # Non-whitespace portion of exon ID before underscore should be the orthologous protein ID
         my $prot = $1; 
@@ -288,6 +290,9 @@ None.
 =head1 NOTES
 
 Exonerate alignment range is reported as the start and end of the alignment region in the query sequence (the target protein). For more information on exonerate "ryo" formats, see https://www.ebi.ac.uk/~guy/exonerate/advanced.html and http://csurs7.csr.uky.edu/cgi-bin/man/man2html?1+exonerate
+
+The regex used to parse target exon names restricts the sequence ID format:
+    if ($exon_name =~ /^(\S+?)_\S+/) 
 
 =head1 AUTHORS
 

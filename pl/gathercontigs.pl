@@ -1,3 +1,5 @@
+#!/usr/bin/perl -w
+
 # Documentation @ __END__
 # WARNING: not designed for use as a standalone module.
 
@@ -30,7 +32,7 @@ my $ctgnums = "$gathercontigs_dir/countallcontigs.txt";
 my %contignum; 
 foreach my $exon_name (@exons) {
 
-    if ($exon_name =~ /^(\S+?)_exon\S+/) {
+    if ($exon_name =~ /^(\S+?)_\S+/) {
 
         # Non-whitespace portion of exon ID before underscore should be the orthologous protein ID
         my $prot = $1; 
@@ -178,7 +180,8 @@ None.
 
 =head1 NOTES
 
-None.
+The regex used to parse target exon names restricts the sequence ID format:
+    if ($exon_name =~ /^(\S+?)_\S+/) 
 
 =head1 AUTHORS
 
