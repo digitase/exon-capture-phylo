@@ -60,7 +60,7 @@ sub blastProts {
         zcat $fil | 
         awk '{if(NR % 4 == 1 || NR % 4 == 2) {sub(/@/, ">"); print; } }' | 
         tee $fasta |
-        parallel -j $np --block 200K --recstart '>' --pipe $blast_call > $blast
+        parallel --gnu -j $np --block 200K --recstart '>' --pipe $blast_call > $blast
     ));
 }
 
