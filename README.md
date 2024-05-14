@@ -1,7 +1,12 @@
 exon-capture-phylo
 ==================
 
-A target recovery pipeline for transcriptome-enabled exon-captures over novel or diverged sample taxa. 
+A target recovery pipeline for transcriptome-enabled exon-captures over novel or diverged sample taxa.
+
+Citation
+---------------
+
+Bragg, Jason G., Sally Potter, Ana C. Afonso Silva, Conrad J. Hoskin, Benjamin Y. H. Bai, and Craig Moritz. ‘Phylogenomics of a Rapid Radiation: The Australian Rainbow Skinks’. BMC Evolutionary Biology 18, no. 1 (December 2018): 15. https://doi.org/10.1186/s12862-018-1130-4.
 
 Getting started
 ---------------
